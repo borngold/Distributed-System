@@ -4,9 +4,10 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+//Defining the interface for client server interaction
 
 public interface ChangeCoordinates extends Remote {
-	public static final String SERVICE_NAME = "ChangeCord";
+	public static final String SERVICE_NAME = "ChangeCord"; 
 	
 	HashMap<String, Object> connectToServer(String clientKey) throws RemoteException;
 	

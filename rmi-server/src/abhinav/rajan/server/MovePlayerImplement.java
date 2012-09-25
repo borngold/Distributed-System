@@ -115,7 +115,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		XCORD=(XCORD+7)%10;
 		YCORD=(YCORD+13)%10;
 		UNIQUE_ID++;
-		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
 		connectReturn.put(playerID, playerInfo);
 		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS);
 		connectReturn.put("GRID", initGrid);

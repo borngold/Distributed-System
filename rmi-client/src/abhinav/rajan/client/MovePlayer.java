@@ -33,7 +33,7 @@ public class MovePlayer{
 		try {
 			//Set system properties
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
-			registry = LocateRegistry.getRegistry("127.0.0.1",9000);
+			registry = LocateRegistry.getRegistry("172.20.10.10",9000);
 			changecord= (ChangeCoordinates)registry.lookup(ChangeCoordinates.SERVICE_NAME);
 			 
 			HashMap<String, Object> connect=changecord.connectToServer(myKey);
@@ -71,7 +71,6 @@ public class MovePlayer{
 						 
 			System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
 			
-						Random random=new Random();
 						while(true){							
 							BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
 							String move = bufferRead.readLine();

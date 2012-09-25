@@ -1,11 +1,13 @@
 package abhinav.rajan.client;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,7 +33,7 @@ public class MovePlayer{
 		try {
 			//Set system properties
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
-			registry = LocateRegistry.getRegistry();
+			registry = LocateRegistry.getRegistry("127.0.0.1",9000);
 			changecord= (ChangeCoordinates)registry.lookup(ChangeCoordinates.SERVICE_NAME);
 			AtomicInteger[][] inputarr=new AtomicInteger[10][10];
 			for(int i=0;i<10;i++)
@@ -73,22 +75,12 @@ public class MovePlayer{
 			//Wait for a second before executing the moves
 			Thread.sleep(1000);
 						 
+			System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
+			
 						Random random=new Random();
-						String move;
-						while(true){
-		            	int map=random.nextInt(4);
-		            	switch(map){
-		            	case 0:move="LEFT";
-		            			break;
-		            	case 1:move="RIGHT";
-		            			break;
-		            	case 2: move="UP";
-		            			break;
-		            	default: move="DOWN";
-		            			break;
-		            	
-		            	}
-		            	
+						while(true){							
+							BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+							String move = bufferRead.readLine();
 		            		HashMap<String, Object> afterMove=changecord.moveToLocation(grid, move,myKey);
 		            		
 		            		if(afterMove==null){
@@ -118,9 +110,6 @@ public class MovePlayer{
 		        			for(int i=0;i<10;i++)
 		        				for(int j=0;j<10;j++)
 		        			       grid[i][j].set(gridAfterMove[i][j].get());
-		        			
-		        			//Move once in every 1000s  
-		        			Thread.sleep(1000);
 		        		
 						}	
 						}
@@ -131,6 +120,8 @@ public class MovePlayer{
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
         
@@ -170,7 +161,7 @@ public class MovePlayer{
 
 			@Override
 				public void onSuccess() throws RemoteException {
-					System.out.println("\n All players alive");				
+					//System.out.println("\n All players alive");				
 				}
 
 				@Override

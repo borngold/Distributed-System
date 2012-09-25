@@ -1,0 +1,17 @@
+package com.abhinav.rajan;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public interface ChangeCoordinates extends Remote {
+	public static final String SERVICE_NAME = "ChangeCord";
+	
+	HashMap<String, Object> connectToServer(String clientKey) throws RemoteException;
+	
+	HashMap<String, Object> moveToLocation(AtomicInteger[][] inputarr,String keyPressed, String playerId) throws RemoteException;
+	
+	void heartBeat(String myKey, Notify notify) throws RemoteException;
+
+}

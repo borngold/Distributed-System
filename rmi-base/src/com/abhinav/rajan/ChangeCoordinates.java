@@ -4,7 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-//Defining the interface for client server interaction
+//Defining the interface for client server interaction 
 
 public interface ChangeCoordinates extends Remote {
 	public static final String SERVICE_NAME = "ChangeCord"; 
@@ -13,6 +13,6 @@ public interface ChangeCoordinates extends Remote {
 	
 	HashMap<String, Object> moveToLocation(AtomicInteger[][] inputarr,String keyPressed, String playerId) throws RemoteException;
 	
-	void heartBeat(String myKey, Notify notify) throws RemoteException;
+	void heartBeat(String myKey, Notify notify) throws RemoteException; //To check whether the client is alive
 
 }

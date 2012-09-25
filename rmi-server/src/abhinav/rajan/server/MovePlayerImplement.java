@@ -3,14 +3,10 @@ package abhinav.rajan.server;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import com.abhinav.rajan.ChangeCoordinates;
 import com.abhinav.rajan.Notify;
 
@@ -32,7 +28,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		Random random=new Random();
 		for(int i=0;i<10;i++){
 			for(int j=0;j<10;j++){
-				initGrid[i][j]=new AtomicInteger(random.nextInt(2)); //Making the number of treasure as 0 or 1
+				initGrid[i][j]=new AtomicInteger(random.nextInt(5)); //Making the number of treasure from 0 to 4
 				sumOfTreasures+=initGrid[i][j].get();
 			}	
 		}
@@ -55,13 +51,13 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		int xCord=playerInfo.get("XCORD");
 		int yCord=playerInfo.get("YCORD");
 		
-		if(keyPressed.equals("LEFT")){
+		if(keyPressed.equalsIgnoreCase("L")){
 			if(xCord-1>=0)
 			playerInfo.put("XCORD",xCord-1);
-		}else if(keyPressed.equals("RIGHT")){
+		}else if(keyPressed.equalsIgnoreCase("R")){
 			if((xCord+1)<=9)
 			playerInfo.put("XCORD",xCord+1);
-		}else if(keyPressed.equals( "UP")){
+		}else if(keyPressed.equalsIgnoreCase( "U")){
 			if((yCord-1)>=0)
 			playerInfo.put("YCORD",yCord-1);
 		}else{

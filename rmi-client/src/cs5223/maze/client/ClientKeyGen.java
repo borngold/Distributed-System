@@ -1,4 +1,4 @@
-package abhinav.rajan.client;
+package cs5223.maze.client;
 
 class ClientKeygen  
 {  

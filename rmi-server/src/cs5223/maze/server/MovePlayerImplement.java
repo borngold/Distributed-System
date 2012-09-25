@@ -1,4 +1,4 @@
-package abhinav.rajan.server;
+package cs5223.maze.server;
 
 import java.rmi.RemoteException;
 import java.util.Calendar;
@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import com.abhinav.rajan.ChangeCoordinates;
-import com.abhinav.rajan.Notify;
+import com.cs5223.maze.ChangeCoordinates;
+import com.cs5223.maze.Notify;
 
 public class MovePlayerImplement implements ChangeCoordinates {
 	public static int UNIQUE_ID=1000;

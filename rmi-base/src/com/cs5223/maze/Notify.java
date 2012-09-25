@@ -1,4 +1,4 @@
-package com.abhinav.rajan;
+package com.cs5223.maze;
 
 import java.rmi.*;
 

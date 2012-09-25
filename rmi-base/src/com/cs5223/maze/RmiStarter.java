@@ -1,4 +1,4 @@
-package com.abhinav.rajan;
+package com.cs5223.maze;
 
 /**
  * class to do some common things for client & server to get RMI working

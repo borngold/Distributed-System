@@ -32,7 +32,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		Random random=new Random();
 		for(int i=0;i<10;i++){
 			for(int j=0;j<10;j++){
-				initGrid[i][j]=new AtomicInteger(random.nextInt(6));
+				initGrid[i][j]=new AtomicInteger(random.nextInt(2)); //Making the number of treasure as 0 or 1
 				sumOfTreasures+=initGrid[i][j].get();
 			}	
 		}

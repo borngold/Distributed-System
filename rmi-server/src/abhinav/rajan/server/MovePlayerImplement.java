@@ -37,8 +37,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 	}
 
 	@Override
-	public HashMap<String, Object> moveToLocation(
-			AtomicInteger[][] inputarr, String keyPressed, String playerId)
+	public HashMap<String, Object> moveToLocation(String keyPressed, String playerId)
 			throws RemoteException {
 		if(trasuresExist){
 			if(connectReturn.get(playerId)==null){
@@ -52,17 +51,17 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		int yCord=playerInfo.get("YCORD");
 		
 		if(keyPressed.equalsIgnoreCase("L")){
-			if(xCord-1>=0)
-			playerInfo.put("XCORD",xCord-1);
+			if(yCord-1>=0)
+			playerInfo.put("YCORD",--yCord);
 		}else if(keyPressed.equalsIgnoreCase("R")){
-			if((xCord+1)<=9)
-			playerInfo.put("XCORD",xCord+1);
+			if((yCord+1)<=9)
+			playerInfo.put("YCORD",++yCord);
 		}else if(keyPressed.equalsIgnoreCase( "U")){
-			if((yCord-1)>=0)
-			playerInfo.put("YCORD",yCord-1);
+			if((xCord-1)>=0)
+			playerInfo.put("XCORD",--xCord);
 		}else{
-			if(yCord+1<=9){
-				playerInfo.put("YCORD",yCord+1);
+			if(xCord+1<=9){
+				playerInfo.put("XCORD",++xCord);
 			}
 		}
 		if(initGrid[xCord][yCord].get()>0){
@@ -116,7 +115,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		XCORD=(XCORD+7)%10;
 		YCORD=(YCORD+13)%10;
 		UNIQUE_ID++;
-		NUMBER_OF_PLAYERS.getAndAdd(1);
+		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
 		connectReturn.put(playerID, playerInfo);
 		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS);
 		connectReturn.put("GRID", initGrid);
@@ -163,7 +162,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 				if((currentTimeStamp-entry.getValue()) > UPDATE_INTERVAL){
 					entry.setValue(-1L);
 					//update the number of players in the game
-					NUMBER_OF_PLAYERS.getAndAdd(-1);
+					NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
 					connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS);
 					//Remove from the global list
 					connectReturn.remove(entry.getKey());

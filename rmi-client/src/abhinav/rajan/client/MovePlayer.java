@@ -35,12 +35,6 @@ public class MovePlayer{
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
 			registry = LocateRegistry.getRegistry("127.0.0.1",9000);
 			changecord= (ChangeCoordinates)registry.lookup(ChangeCoordinates.SERVICE_NAME);
-			AtomicInteger[][] inputarr=new AtomicInteger[10][10];
-			for(int i=0;i<10;i++)
-				for(int j=0;j<10;j++){
-					inputarr[i][j]= new AtomicInteger(0);
-;
-				}
 			 
 			HashMap<String, Object> connect=changecord.connectToServer(myKey);
 			if(connect==null){
@@ -81,7 +75,7 @@ public class MovePlayer{
 						while(true){							
 							BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
 							String move = bufferRead.readLine();
-		            		HashMap<String, Object> afterMove=changecord.moveToLocation(grid, move,myKey);
+		            		HashMap<String, Object> afterMove=changecord.moveToLocation(move,myKey);
 		            		
 		            		if(afterMove==null){
 		            			System.out.println("Game Over...");
@@ -100,18 +94,16 @@ public class MovePlayer{
 		        			final AtomicInteger[][] gridAfterMove=(AtomicInteger[][]) afterMove.get("GRID");
 		        			for(int i=0;i<10;i++){
 		        				for(int j=0;j<10;j++){
-		        					System.out.print(grid[i][j]+" ");
+		        					System.out.print(gridAfterMove[i][j]+" ");
 		        				}
 		        				System.out.println("");
 		        			}
 		        		
 		        			
 		        			System.out.println("_______END OF AFTER MOVE________");
-		        			for(int i=0;i<10;i++)
-		        				for(int j=0;j<10;j++)
-		        			       grid[i][j].set(gridAfterMove[i][j].get());
 		        		
 						}	
+		            		Thread.sleep(100);
 						}
 								            	
 		           

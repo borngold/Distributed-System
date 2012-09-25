@@ -19,7 +19,7 @@ public class MovePlayerEngineStarter extends RmiStarter {
 			ChangeCoordinates engine = new MovePlayerImplement();
 			ChangeCoordinates engineStub = (ChangeCoordinates)UnicastRemoteObject.exportObject(engine, 0);
 
-            Registry registry = LocateRegistry.getRegistry();
+            Registry registry = LocateRegistry.createRegistry(9000);
             registry.rebind(ChangeCoordinates.SERVICE_NAME, engineStub);
             System.out.println("Move player server started");
         }

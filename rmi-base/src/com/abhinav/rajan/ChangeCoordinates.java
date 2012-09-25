@@ -11,7 +11,7 @@ public interface ChangeCoordinates extends Remote {
 	
 	HashMap<String, Object> connectToServer(String clientKey) throws RemoteException;
 	
-	HashMap<String, Object> moveToLocation(AtomicInteger[][] inputarr,String keyPressed, String playerId) throws RemoteException;
+	HashMap<String, Object> moveToLocation(String keyPressed, String playerId) throws RemoteException;
 	
 	void heartBeat(String myKey, Notify notify) throws RemoteException; //To check whether the client is alive
 

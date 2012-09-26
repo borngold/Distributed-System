@@ -8,15 +8,16 @@ import com.ds.maze.ChangeCoordinates;
 import com.ds.maze.RmiStarter;
 
 public class MovePlayerEngineStarter extends RmiStarter {
-
+	public static int gridSize;
+	
 	public MovePlayerEngineStarter() {
-		super(ChangeCoordinates.class);
+		super(ChangeCoordinates.class);		
 	}
 
 	@Override
 	public void doCustomRmiHandling() {
 		try {
-			ChangeCoordinates engine = new MovePlayerImplement();
+			ChangeCoordinates engine = new MovePlayerImplement(gridSize);
 			ChangeCoordinates engineStub = (ChangeCoordinates)UnicastRemoteObject.exportObject(engine, 0);
 
             Registry registry = LocateRegistry.createRegistry(9000);
@@ -28,6 +29,7 @@ public class MovePlayerEngineStarter extends RmiStarter {
         }		
 	}
 	public static void main(String[] args) {
+		gridSize = Integer.parseInt(args[0]);
         new MovePlayerEngineStarter();
     }
 	}

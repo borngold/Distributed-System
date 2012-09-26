@@ -15,10 +15,11 @@ import com.ds.maze.PlayerInfo;
 
 public class MovePlayerImplement implements ChangeCoordinates {
 	public static int UNIQUE_ID=1000;
+	public static int gridSize = 0;
 	private static AtomicInteger NUMBER_OF_PLAYERS=new AtomicInteger();
 	private static int XCORD=7;
 	private static int YCORD=3;
-	private static AtomicInteger[][] initGrid= new AtomicInteger[10][10];
+	private static AtomicInteger[][] initGrid;
 	private static HashMap <String,Object> connectReturn;
 	private static boolean CONNECT_FLAG=true;
 	private static int sumOfTreasures=0;
@@ -27,10 +28,12 @@ public class MovePlayerImplement implements ChangeCoordinates {
 	CheckForAndUpdateFailures heart= new CheckForAndUpdateFailures();
 	
 	
-	public MovePlayerImplement(){
+	public MovePlayerImplement(int size){
+		gridSize = size;
+		initGrid = new AtomicInteger[gridSize][gridSize];
 		Random random=new Random();
-		for(int i=0;i<10;i++){
-			for(int j=0;j<10;j++){
+		for(int i=0;i<gridSize;i++){
+			for(int j=0;j<gridSize;j++){
 				initGrid[i][j]=new AtomicInteger(random.nextInt(5)); //Making the number of treasure from 0 to 4
 				sumOfTreasures+=initGrid[i][j].get();
 			}	
@@ -79,7 +82,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		Set keys = connectReturn.keySet();
 
 		for(Object value : keys){
-			if(!((String)value).equals(playerId) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+			if(!((String)value).equals(playerId) && !((String)value).equals("SIZE") && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
 			
 				PlayerInfo cordinates=(PlayerInfo) connectReturn.get(value);
 				if(cordinates.getxCord() == xCord && cordinates.getyCord() == yCord){
@@ -99,9 +102,9 @@ public class MovePlayerImplement implements ChangeCoordinates {
 			playerInfo.setNumberOftreasures(++treasureCollected);
 			connectReturn.put(playerId, playerInfo);
 			//Convert to integer before returning
-			int [][]atomicToIntGrid = new int[10][10];
-			for(int i=0;i<10;i++){
-				for(int j=0;j<10;j++)
+			int [][]atomicToIntGrid = new int[gridSize][gridSize];
+			for(int i=0;i<gridSize;i++){
+				for(int j=0;j<gridSize;j++)
 					atomicToIntGrid[i][j]=initGrid[i][j].get();
 			}
 			
@@ -156,11 +159,12 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
 		
 		//Convert to integer before returning
-		int [][]atomicToIntGrid = new int[10][10];
-		for(int i=0;i<10;i++){
-			for(int j=0;j<10;j++)
+		int [][]atomicToIntGrid = new int[gridSize][gridSize];
+		for(int i=0;i<gridSize;i++){
+			for(int j=0;j<gridSize;j++)
 				atomicToIntGrid[i][j]=initGrid[i][j].get();
 		}
+		connectReturn.put("SIZE", gridSize);
 		connectReturn.put("GRID", atomicToIntGrid);
 		connectReturn.put("TREASURE_SUM",sumOfTreasures);
 		

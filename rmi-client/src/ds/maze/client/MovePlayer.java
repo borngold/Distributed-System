@@ -31,7 +31,8 @@ public class MovePlayer extends JFrame  {
 	private static ChangeCoordinates changecord;
 	private static String myKey;
 	private Board board;
-	
+	private static String addr ="127.0.0.1";
+	private static int gridSize = 0;
 	public MovePlayer(){
 		myKey=new ClientKeygen().genKey();
 	}
@@ -42,7 +43,7 @@ public class MovePlayer extends JFrame  {
 		try {
 			//Set system properties
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
-			registry = LocateRegistry.getRegistry("127.0.0.1",9000);
+			registry = LocateRegistry.getRegistry(addr,9000);
 			changecord= (ChangeCoordinates)registry.lookup(ChangeCoordinates.SERVICE_NAME);
 			 
 			HashMap<String, Object> connect=changecord.connectToServer(myKey);
@@ -65,15 +66,16 @@ public class MovePlayer extends JFrame  {
 			System.out.println("MY STATE"+"==>"+((PlayerInfo)connect.get(myKey)).toString());
 			System.out.println("NO_OF_PLAYERS"+"==>"+connect.get("NO_OF_PLAYERS"));
 			System.out.println("GRID WITH TREASURES");
+			gridSize = (Integer) (connect.get("SIZE"));
 			Set keys = connect.keySet();
 			int i =0, j = 0;
 			int np = (Integer)(connect.get("NO_OF_PLAYERS")) ;
 			cord = new int[np][2];
 			for(Object value : keys){
 				j = 0;
-				if(!((String)value).equals(myKey) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+				if(!((String)value).equals(myKey) && !((String)value).equals("SIZE") && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
 				
-					PlayerInfo cordinates=(PlayerInfo) connect.get(value);
+					PlayerInfo cordinates = (PlayerInfo) connect.get(value);
 					cord[i][j] = cordinates.getxCord();
 					j++;
 					cord[i][j] = cordinates.getyCord();
@@ -81,8 +83,8 @@ public class MovePlayer extends JFrame  {
 				}
 			}
 			int[][] grid=(int[][]) connect.get("GRID");
-			for(i=0;i<10;i++){
-				for(j=0;j<10;j++){
+			for(i=0;i<gridSize;i++){
+				for(j=0;j<gridSize;j++){
 					System.out.print(grid[i][j]+" ");
 				}
 				System.out.println("");
@@ -94,11 +96,11 @@ public class MovePlayer extends JFrame  {
 			//Wait for a second before executing the moves
 			Thread.sleep(1000);
 			PlayerInfo myinfo=(PlayerInfo) connect.get(myKey);			
-			board = new Board(10*75,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
+			board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
 	        add(board);
 	        setTitle("Skeleton");
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
-	        setSize(10*77, 10*78);
+	        setSize(gridSize*77, gridSize*78);
 	        setLocationRelativeTo(null);
 	        setVisible(true);
 	        setResizable(false);
@@ -145,8 +147,8 @@ public class MovePlayer extends JFrame  {
 			System.out.println("GRID WITH TREASURES");
 			
 			gridAfterMove=(int[][]) afterMove.get("GRID");
-			for(int i=0;i<10;i++){
-				for(int j=0;j<10;j++){
+			for(int i=0;i<gridSize;i++){
+				for(int j=0;j<gridSize;j++){
 					System.out.print(gridAfterMove[i][j]+" ");
 				}
 				System.out.println("");
@@ -171,7 +173,7 @@ public class MovePlayer extends JFrame  {
 		int[][] cord = new int[np-1][2];
 		for(Object value : keys){
 			j = 0;
-			if(!((String)value).equals(myKey) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+			if(!((String)value).equals(myKey) && !((String)value).equals("SIZE") &&  !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
 			
 				PlayerInfo cordinates=(PlayerInfo) afterMove.get(value);
 				cord[i][j] = cordinates.getxCord();
@@ -185,7 +187,8 @@ public class MovePlayer extends JFrame  {
 	}
 	
 	public static void main(String[] args) {
-		 
+		if( args != null)
+			addr = args[0];
 		new MovePlayer().doCustomRmiHandling();
 	        
 	}
@@ -240,13 +243,15 @@ public class MovePlayer extends JFrame  {
 		 private int [][]grid;
 		 private int [][] players;
 		 private int numberPlayers;
+		 private int gridSize;
 		 
 		 public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
 			 
 			 setFocusable(true);
 			 addKeyListener(new TAdapter());
 			 setDoubleBuffered(true);
-			 this.boardSize=boardSize;
+			 gridSize = boardSize;
+			 this.boardSize=boardSize * 75;
 			 this.x = x;
 			 this.y = y;
 			 this.grid = grid2;
@@ -271,8 +276,8 @@ public class MovePlayer extends JFrame  {
 				 g2d.drawLine(2, i, boardSize+2, i);
 				 g2d.drawLine(i, 2, i, boardSize+2);
 			 }
-			 for(int k=0;k<10;k++){
-				 for(int j=0;j<10;j++){
+			 for(int k=0;k<gridSize;k++){
+				 for(int j=0;j<gridSize;j++){
 					 g.drawString(Integer.toString(grid[k][j]),20+j*75,20+k*75);					 
 				 }	
 			 }

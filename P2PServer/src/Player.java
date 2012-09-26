@@ -3,9 +3,11 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import com.abhinav.rajan.ChangeCoordinates;
-import com.abhinav.rajan.Notify;
-import com.abhinav.rajan.RmiStarter;
+
+import com.ds.maze.ChangeCoordinates;
+import com.ds.maze.Notify;
+import com.ds.maze.RmiStarter;
+
 
 
 public class Player extends RmiStarter implements ChangeCoordinates{
@@ -47,6 +49,8 @@ public class Player extends RmiStarter implements ChangeCoordinates{
 		// TODO Auto-generated method stub
 		
 	}
+
+
 
 
 }

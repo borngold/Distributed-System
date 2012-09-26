@@ -10,7 +10,6 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -18,10 +17,10 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ds.maze.ChangeCoordinates;
 import com.ds.maze.Notify;
+import com.ds.maze.PlayerInfo;
 import com.ds.maze.PolicyFileLocator;
 
 import javax.imageio.ImageIO;
@@ -63,25 +62,25 @@ public class MovePlayer extends JFrame  {
 		    //Print the current state 
 			
 			System.out.println("_________________________");
-			System.out.println("MY STATE"+"==>"+connect.get(myKey));
+			System.out.println("MY STATE"+"==>"+((PlayerInfo)connect.get(myKey)).toString());
 			System.out.println("NO_OF_PLAYERS"+"==>"+connect.get("NO_OF_PLAYERS"));
 			System.out.println("GRID WITH TREASURES");
 			Set keys = connect.keySet();
 			int i =0, j = 0;
-			int np = ((AtomicInteger) connect.get("NO_OF_PLAYERS")).get() ;
+			int np = (Integer)(connect.get("NO_OF_PLAYERS")) ;
 			cord = new int[np][2];
 			for(Object value : keys){
 				j = 0;
 				if(!((String)value).equals(myKey) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
 				
-					HashMap<String,Integer> cordinates=(HashMap<String, Integer>) connect.get(value);
-					cord[i][j] = cordinates.get("XCORD");
+					PlayerInfo cordinates=(PlayerInfo) connect.get(value);
+					cord[i][j] = cordinates.getxCord();
 					j++;
-					cord[i][j] = cordinates.get("YCORD");
+					cord[i][j] = cordinates.getyCord();
 					i++;
 				}
 			}
-			AtomicInteger[][] grid=(AtomicInteger[][]) connect.get("GRID");
+			int[][] grid=(int[][]) connect.get("GRID");
 			for(i=0;i<10;i++){
 				for(j=0;j<10;j++){
 					System.out.print(grid[i][j]+" ");
@@ -94,8 +93,8 @@ public class MovePlayer extends JFrame  {
 			
 			//Wait for a second before executing the moves
 			Thread.sleep(1000);
-			HashMap<String,Integer> myinfo=(HashMap<String, Integer>) connect.get(myKey);			
-			board = new Board(10*75,myinfo.get("XCORD"),myinfo.get("YCORD"),grid,cord,np);
+			PlayerInfo myinfo=(PlayerInfo) connect.get(myKey);			
+			board = new Board(10*75,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
 	        add(board);
 	        setTitle("Skeleton");
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -123,7 +122,7 @@ public class MovePlayer extends JFrame  {
 	public void move(String move) throws InterruptedException {
 		
 		HashMap<String, Object> afterMove = null;
-		AtomicInteger[][] gridAfterMove = null;
+		int[][] gridAfterMove = null;
 		try {
 			afterMove = changecord.moveToLocation(move,myKey);
 		} catch (RemoteException e) {
@@ -145,7 +144,7 @@ public class MovePlayer extends JFrame  {
 			System.out.println("NO_OF_PLAYERS"+"==>"+afterMove.get("NO_OF_PLAYERS"));
 			System.out.println("GRID WITH TREASURES");
 			
-			gridAfterMove=(AtomicInteger[][]) afterMove.get("GRID");
+			gridAfterMove=(int[][]) afterMove.get("GRID");
 			for(int i=0;i<10;i++){
 				for(int j=0;j<10;j++){
 					System.out.print(gridAfterMove[i][j]+" ");
@@ -157,24 +156,24 @@ public class MovePlayer extends JFrame  {
 			System.out.println("_______END OF AFTER MOVE________");
 		
  		}	
- 		HashMap<String,Integer> myinfo=(HashMap<String, Integer>) afterMove.get(myKey);
+ 		PlayerInfo myinfo=(PlayerInfo) afterMove.get(myKey);
         	
- 		Set keys = afterMove.keySet();
+ 		Set<String> keys = afterMove.keySet();
 		int i =0, j = 0;
-		int np = ((AtomicInteger) afterMove.get("NO_OF_PLAYERS")).get() ;
+		int np = (Integer) afterMove.get("NO_OF_PLAYERS") ;
 		int[][] cord = new int[np-1][2];
 		for(Object value : keys){
 			j = 0;
 			if(!((String)value).equals(myKey) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
 			
-				HashMap<String,Integer> cordinates=(HashMap<String, Integer>) afterMove.get(value);
-				cord[i][j] = cordinates.get("XCORD");
+				PlayerInfo cordinates=(PlayerInfo) afterMove.get(value);
+				cord[i][j] = cordinates.getxCord();
 				j++;
-				cord[i][j] = cordinates.get("YCORD");
+				cord[i][j] = cordinates.getyCord();
 				i++;
 			}
 		}
-		board.drawAgain(myinfo.get("XCORD"),myinfo.get("YCORD"),gridAfterMove,cord,np);
+		board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridAfterMove,cord,np);
  		
  		Thread.sleep(100);
 					
@@ -233,11 +232,11 @@ public class MovePlayer extends JFrame  {
 		 private Image image;
 		 private int x = 10;
 		 private int y = 10;
-		 private AtomicInteger [][]grid;
+		 private int [][]grid;
 		 private int [][] players;
 		 private int numberPlayers;
 		 
-		 public Board(int boardSize,int x, int y, AtomicInteger[][] grid2,int [][] players,int np) {
+		 public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
 			 
 			 setFocusable(true);
 			 addKeyListener(new TAdapter());
@@ -269,7 +268,7 @@ public class MovePlayer extends JFrame  {
 			 }
 			 for(int k=0;k<10;k++){
 				 for(int j=0;j<10;j++){
-					 g.drawString(grid[k][j].toString(),20+j*75,20+k*75);					 
+					 g.drawString(Integer.toString(grid[k][j]),20+j*75,20+k*75);					 
 				 }	
 			 }
 			 if(numberPlayers > 1){
@@ -288,7 +287,7 @@ public class MovePlayer extends JFrame  {
 		 }
 		    
 		    
-		 public void drawAgain(int newX, int newY,AtomicInteger [][] newGrd,int [][] newPlayers,int newNp) {
+		 public void drawAgain(int newX, int newY,int [][] newGrd,int [][] newPlayers,int newNp) {
 			 x = newX ;
 			 y = newY ;
 			 grid = newGrd;

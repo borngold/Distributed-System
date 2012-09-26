@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ds.maze.ChangeCoordinates;
 import com.ds.maze.Notify;
+import com.ds.maze.PlayerInfo;
 
 public class MovePlayerImplement implements ChangeCoordinates {
 	public static int UNIQUE_ID=1000;
@@ -47,39 +48,46 @@ public class MovePlayerImplement implements ChangeCoordinates {
 				return error;
 				
 			}
-		HashMap<String,Integer> playerInfo=	(HashMap<String, Integer>) connectReturn.get(playerId);
-		int xCord=playerInfo.get("XCORD");
-		int yCord=playerInfo.get("YCORD");
+		PlayerInfo playerInfo=	(PlayerInfo) connectReturn.get(playerId);
+		int xCord=playerInfo.getxCord();
+		int yCord=playerInfo.getyCord();
 		int flag = 0;
 		if(keyPressed.equalsIgnoreCase("L")){
 			if(yCord-1>=0){
 				flag = 1;
-				playerInfo.put("YCORD",--yCord);
+				playerInfo.setyCord(--yCord);
 			}		
 		}else if(keyPressed.equalsIgnoreCase("R")){
 			if((yCord+1)<=9){
 				flag = 1;
-				playerInfo.put("YCORD",++yCord);
+				playerInfo.setyCord(++yCord);
 			}
 			
 		}else if(keyPressed.equalsIgnoreCase( "U")){
 			if((xCord-1)>=0){
 				flag = 1;
-				playerInfo.put("XCORD",--xCord);				
+				playerInfo.setxCord(--xCord);				
 			}
 			
 		}else{
 			if(xCord+1<=9){
 				flag = 1;
-				playerInfo.put("XCORD",++xCord);
+				playerInfo.setxCord(++xCord);
 			}
 		}
 		if(initGrid[xCord][yCord].get()>0 && flag == 1) {
 			initGrid[xCord][yCord].set(initGrid[xCord][yCord].decrementAndGet());
-			int treasureCollected=playerInfo.get("TREASURES_COLLECTED");
-			playerInfo.put("TREASURES_COLLECTED", treasureCollected+1);
+			int treasureCollected=playerInfo.getNumberOftreasures();
+			playerInfo.setNumberOftreasures(++treasureCollected);
 			connectReturn.put(playerId, playerInfo);
-			connectReturn.put("GRID", initGrid);
+			//Convert to integer before returning
+			int [][]atomicToIntGrid = new int[10][10];
+			for(int i=0;i<10;i++){
+				for(int j=0;j<10;j++)
+					atomicToIntGrid[i][j]=initGrid[i][j].get();
+			}
+			
+			connectReturn.put("GRID", atomicToIntGrid);
 			sumOfTreasures--;
 			if(sumOfTreasures==0){
 				trasuresExist=false;
@@ -96,11 +104,11 @@ public class MovePlayerImplement implements ChangeCoordinates {
 	@Override
 	public HashMap<String, Object> connectToServer(String clientKey) throws RemoteException {
 		if(CONNECT_FLAG){
-		HashMap<String,Integer> playerInfo=new HashMap<String,Integer>();
-		playerInfo.put("PLAYER_ID", UNIQUE_ID);
-		playerInfo.put("XCORD", XCORD);
-		playerInfo.put("YCORD", YCORD);
-		playerInfo.put("TREASURES_COLLECTED", 0);
+		PlayerInfo playerInfo=new PlayerInfo();
+		playerInfo.setUniqueId(UNIQUE_ID);
+		playerInfo.setxCord(XCORD);
+		playerInfo.setyCord(YCORD);
+		playerInfo.setNumberOftreasures(0);
 		updateGlobalInfo(clientKey,playerInfo);
 		
 		//Start the thread to check for client heart beats every 10 seconds
@@ -121,14 +129,21 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		
 	}
 	
-	private void updateGlobalInfo(String playerID,HashMap<String,Integer> playerInfo){
+	private void updateGlobalInfo(String playerID,PlayerInfo playerInfo){
 		XCORD=(XCORD+7)%10;
 		YCORD=(YCORD+13)%10;
 		UNIQUE_ID++;
 		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
 		connectReturn.put(playerID, playerInfo);
-		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS);
-		connectReturn.put("GRID", initGrid);
+		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
+		
+		//Convert to integer before returning
+		int [][]atomicToIntGrid = new int[10][10];
+		for(int i=0;i<10;i++){
+			for(int j=0;j<10;j++)
+				atomicToIntGrid[i][j]=initGrid[i][j].get();
+		}
+		connectReturn.put("GRID", atomicToIntGrid);
 		connectReturn.put("TREASURE_SUM",sumOfTreasures);
 		
 	}
@@ -173,7 +188,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 					entry.setValue(-1L);
 					//update the number of players in the game
 					NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-					connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS);
+					connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
 					//Remove from the global list
 					connectReturn.remove(entry.getKey());
 					

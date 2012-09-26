@@ -195,7 +195,7 @@ public class MovePlayer extends JFrame  {
 
 	 public class Board extends JPanel  {
 		 
-		 private String location = "/Users/nikilvasudevan/Desktop/DS/AWT/bin/image.png";
+		 private String location = "src/image.png";
 		 private int boardSize;
 		 private Image image;
 		 private int x = 10;

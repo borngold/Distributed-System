@@ -50,31 +50,40 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		HashMap<String,Integer> playerInfo=	(HashMap<String, Integer>) connectReturn.get(playerId);
 		int xCord=playerInfo.get("XCORD");
 		int yCord=playerInfo.get("YCORD");
-		
+		int flag = 0;
 		if(keyPressed.equalsIgnoreCase("L")){
-			if(yCord-1>=0)
-			playerInfo.put("YCORD",--yCord);
+			if(yCord-1>=0){
+				flag = 1;
+				playerInfo.put("YCORD",--yCord);
+			}		
 		}else if(keyPressed.equalsIgnoreCase("R")){
-			if((yCord+1)<=9)
-			playerInfo.put("YCORD",++yCord);
+			if((yCord+1)<=9){
+				flag = 1;
+				playerInfo.put("YCORD",++yCord);
+			}
+			
 		}else if(keyPressed.equalsIgnoreCase( "U")){
-			if((xCord-1)>=0)
-			playerInfo.put("XCORD",--xCord);
+			if((xCord-1)>=0){
+				flag = 1;
+				playerInfo.put("XCORD",--xCord);				
+			}
+			
 		}else{
 			if(xCord+1<=9){
+				flag = 1;
 				playerInfo.put("XCORD",++xCord);
 			}
 		}
-		if(initGrid[xCord][yCord].get()>0){
+		if(initGrid[xCord][yCord].get()>0 && flag == 1) {
 			initGrid[xCord][yCord].set(initGrid[xCord][yCord].decrementAndGet());
-		int treasureCollected=playerInfo.get("TREASURES_COLLECTED");
-		playerInfo.put("TREASURES_COLLECTED", treasureCollected+1);
-		connectReturn.put(playerId, playerInfo);
-		connectReturn.put("GRID", initGrid);
-		sumOfTreasures--;
-		if(sumOfTreasures==0){
-			trasuresExist=false;
-		}
+			int treasureCollected=playerInfo.get("TREASURES_COLLECTED");
+			playerInfo.put("TREASURES_COLLECTED", treasureCollected+1);
+			connectReturn.put(playerId, playerInfo);
+			connectReturn.put("GRID", initGrid);
+			sumOfTreasures--;
+			if(sumOfTreasures==0){
+				trasuresExist=false;
+			}
 		}
 		
 		return connectReturn;

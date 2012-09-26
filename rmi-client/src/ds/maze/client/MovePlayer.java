@@ -156,8 +156,15 @@ public class MovePlayer extends JFrame  {
 			System.out.println("_______END OF AFTER MOVE________");
 		
  		}	
+ 		updateTable(afterMove);
+ 		
+ 		Thread.sleep(100);
+					
+	}
+	
+	public void updateTable(HashMap<String, Object> afterMove){
  		PlayerInfo myinfo=(PlayerInfo) afterMove.get(myKey);
-        	
+    	
  		Set<String> keys = afterMove.keySet();
 		int i =0, j = 0;
 		int np = (Integer) afterMove.get("NO_OF_PLAYERS") ;
@@ -173,10 +180,8 @@ public class MovePlayer extends JFrame  {
 				i++;
 			}
 		}
-		board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridAfterMove,cord,np);
- 		
- 		Thread.sleep(100);
-					
+		this.board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),(int[][]) afterMove.get("GRID"),cord,np);
+		
 	}
 	
 	public static void main(String[] args) {

@@ -3,6 +3,7 @@ package ds.maze.server;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,31 +52,48 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		PlayerInfo playerInfo=	(PlayerInfo) connectReturn.get(playerId);
 		int xCord=playerInfo.getxCord();
 		int yCord=playerInfo.getyCord();
-		int flag = 0;
+		boolean flag = false;
 		if(keyPressed.equalsIgnoreCase("L")){
 			if(yCord-1>=0){
-				flag = 1;
-				playerInfo.setyCord(--yCord);
+				flag = true;
+				--yCord;
 			}		
 		}else if(keyPressed.equalsIgnoreCase("R")){
 			if((yCord+1)<=9){
-				flag = 1;
-				playerInfo.setyCord(++yCord);
+				flag = true;
+				++yCord;
 			}
 			
 		}else if(keyPressed.equalsIgnoreCase( "U")){
 			if((xCord-1)>=0){
-				flag = 1;
-				playerInfo.setxCord(--xCord);				
+				flag = true;
+				--xCord;				
 			}
 			
 		}else{
 			if(xCord+1<=9){
-				flag = 1;
-				playerInfo.setxCord(++xCord);
+				flag = true;
+				++xCord;
 			}
 		}
-		if(initGrid[xCord][yCord].get()>0 && flag == 1) {
+		Set keys = connectReturn.keySet();
+
+		for(Object value : keys){
+			if(!((String)value).equals(playerId) && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+			
+				PlayerInfo cordinates=(PlayerInfo) connectReturn.get(value);
+				if(cordinates.getxCord() == xCord && cordinates.getyCord() == yCord){
+					flag = false;
+					break;
+				}
+				
+			}
+		}
+		if(flag){
+			playerInfo.setxCord(xCord);
+			playerInfo.setyCord(yCord);
+		}
+		if(initGrid[xCord][yCord].get()>0 && flag) {
 			initGrid[xCord][yCord].set(initGrid[xCord][yCord].decrementAndGet());
 			int treasureCollected=playerInfo.getNumberOftreasures();
 			playerInfo.setNumberOftreasures(++treasureCollected);

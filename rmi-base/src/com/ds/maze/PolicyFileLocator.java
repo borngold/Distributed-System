@@ -1,4 +1,4 @@
-package com.cs5223.maze;
+package com.ds.maze;
 
 import java.io.BufferedWriter;
 import java.io.File;

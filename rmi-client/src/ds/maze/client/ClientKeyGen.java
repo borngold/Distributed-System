@@ -1,4 +1,4 @@
-package cs5223.maze.client;
+package ds.maze.client;
 
 class ClientKeygen  
 {  

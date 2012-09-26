@@ -1,4 +1,4 @@
-package cs5223.maze.client;
+package ds.maze.client;
 
 
 
@@ -18,9 +18,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.cs5223.maze.ChangeCoordinates;
-import com.cs5223.maze.Notify;
-import com.cs5223.maze.PolicyFileLocator;
+import com.ds.maze.ChangeCoordinates;
+import com.ds.maze.Notify;
+import com.ds.maze.PolicyFileLocator;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -224,7 +224,7 @@ public class MovePlayer extends JFrame  {
 		 public void paint(Graphics g) {
 			 super.paint(g);
 			 Graphics2D g2d = (Graphics2D)g;
-			 g2d.setColor(Color.BLUE);        
+			 g2d.setColor(Color.RED);        
 			 g2d.drawImage(image,40+y*75,40+x*75, this);
 			 for( int i = 2; i <= boardSize+2; i=i+75 ){
 				 g2d.drawLine(2, i, boardSize+2, i);

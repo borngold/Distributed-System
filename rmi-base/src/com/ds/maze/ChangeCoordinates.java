@@ -1,4 +1,4 @@
-package com.cs5223.maze;
+package com.ds.maze;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

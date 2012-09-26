@@ -1,11 +1,11 @@
-package cs5223.maze.server;
+package ds.maze.server;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import com.cs5223.maze.ChangeCoordinates;
-import com.cs5223.maze.RmiStarter;
+import com.ds.maze.ChangeCoordinates;
+import com.ds.maze.RmiStarter;
 
 public class MovePlayerEngineStarter extends RmiStarter {
 

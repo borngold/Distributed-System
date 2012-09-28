@@ -36,9 +36,10 @@ public class Player extends JFrame{
 	private static String myKey;
 	private static String firstServerIp;
 	private static String myIp;
+	private HeartBeatSender hb;
 	
 	public Player(){
-
+		
 		
 		/* 
 		 * This part of the code creates a registry for all peers. Invocation of the implementation methods would occur either remotely 
@@ -46,35 +47,36 @@ public class Player extends JFrame{
 		 */
 		System.setProperty("java.rmi.server.codebase", P2PBase.class.getProtectionDomain().getCodeSource().getLocation().toString());
 		System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
-
-	        if(System.getSecurityManager() == null) {
-	            System.setSecurityManager(new SecurityManager());
-	        }
-	        
-	        try {
-
-	        	//instantiate class variables
-	    		serverList=new ConcurrentLinkedQueue<String>();
-	    		myKey=new ClientKeygen().genKey();
-	    		//For now both are the same
-	    		firstServerIp=InetAddress.getLocalHost().getHostAddress();
-	    		myIp=InetAddress.getLocalHost().getHostAddress();	        	
-				P2PBase engine = new PlayerMoveImplement();
-				P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);
-	            Registry registry = LocateRegistry.createRegistry(9000);
-	            registry.rebind(P2PBase.SERVICE_NAME, engineStub);
-	            System.out.println("Created a registry at "+InetAddress.getLocalHost().getHostAddress()+" and port 9000");
-	        }
-	        catch(Exception e) {
-	            e.printStackTrace();
-	        }
-
+		
+		if(System.getSecurityManager() == null) {
+			System.setSecurityManager(new SecurityManager());
+		}
+		
+		try {
+			
+			//instantiate class variables
+			serverList=new ConcurrentLinkedQueue<String>();
+			myKey=new ClientKeygen().genKey();
+			//For now both are the same
+			firstServerIp="172.20.10.3";
+			myIp=InetAddress.getLocalHost().getHostAddress();	        	
+			P2PBase engine = new PlayerMoveImplement();
+			P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);
+			Registry registry = LocateRegistry.createRegistry(9000);
+			registry.rebind(P2PBase.SERVICE_NAME, engineStub);
+			System.out.println("Created a registry at "+InetAddress.getLocalHost().getHostAddress()+" and port 9000");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private static void makeConnectionSettings(String serverIP){
 		//Set system properties
 		Registry registry;
 		try {
+			changecord=null;
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
 			registry = LocateRegistry.getRegistry(serverIP,9000);
 			changecord= (P2PBase)registry.lookup(P2PBase.SERVICE_NAME);
@@ -83,19 +85,18 @@ public class Player extends JFrame{
 			//Handle the connection loss exception
 			e.printStackTrace();
 		} catch (RemoteException e) {
-			
-			
-			e.printStackTrace();
+			serverList.remove();
+			makeConnectionSettings(serverList.element());
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
 	}
-
 	
-
+	
+	
 	public void startPlaying() {
 		try {
-
+			
 			makeConnectionSettings(firstServerIp);
 			int [][] cord;		
 			HashMap<String, Object> connect=changecord.connectToServer(myKey,myIp);
@@ -126,7 +127,7 @@ public class Player extends JFrame{
 			for(Object value : keys){
 				j = 0;
 				if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
-				
+					
 					PlayerInfoP2P cordinates=(PlayerInfoP2P) connect.get(value);
 					cord[i][j] = cordinates.getxCord();
 					j++;
@@ -141,7 +142,7 @@ public class Player extends JFrame{
 				}
 				System.out.println("");
 			}
-		
+			
 			
 			System.out.println("_________________________");
 			
@@ -155,21 +156,15 @@ public class Player extends JFrame{
 	        setLocationRelativeTo(null);
 	        setVisible(true);
 	        setResizable(false);
-						 
+			
 			System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
 			
 			//Once connection has been successfully established, start sending periodic heart beats to the server
-			Thread heartbeat=new Thread(new HeartBeatSender());   
+			hb=new HeartBeatSender();
+			
+			Thread heartbeat=new Thread(hb);   
 			heartbeat.setDaemon(true);
 			heartbeat.start();
-		    
-			
-
-
-			
-			
-						            	
-		           
 		} catch (RemoteException e) {
 			serverList.remove();
 			makeConnectionSettings(serverList.element());
@@ -181,7 +176,7 @@ public class Player extends JFrame{
 	
 	
 	
-public void move(String move) throws InterruptedException {
+	public static void move(String move) throws InterruptedException {
 		
 		HashMap<String, Object> afterMove = null;
 		GlobalInfoP2P globalInfo=null;
@@ -194,7 +189,7 @@ public void move(String move) throws InterruptedException {
 			//HANDLE THE CONNECTION LOSS EXCEPTION BY CONNECTING TO THE FIRST IN THE LIST OF AVAILABLE SERVERS
 			serverList.remove();
 			makeConnectionSettings(serverList.element());
-
+			
 			e.printStackTrace();
 		}
  		
@@ -220,13 +215,13 @@ public void move(String move) throws InterruptedException {
 				}
 				System.out.println("");
 			}
-		
+			
 			
 			System.out.println("_______END OF AFTER MOVE________");
-		
+			
  		}	
  		PlayerInfoP2P myinfo=(PlayerInfoP2P) afterMove.get(myKey);
-        	
+		
  		Set<String> keys = afterMove.keySet();
 		int i =0, j = 0;
 		int np = (Integer) globalInfo.getNumberOfplayers();
@@ -234,7 +229,7 @@ public void move(String move) throws InterruptedException {
 		for(Object value : keys){
 			j = 0;
 			if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
-			
+				
 				PlayerInfoP2P cordinates=(PlayerInfoP2P) afterMove.get(value);
 				cord[i][j] = cordinates.getxCord();
 				j++;
@@ -245,205 +240,217 @@ public void move(String move) throws InterruptedException {
 		board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridAfterMove,cord,np);
  		
  		Thread.sleep(100);
-					
+		
 	}
 	
 	public static void main(String[] args) {
-		 
+		
 		new Player().startPlaying();
-	        
+		
 	}
-	 	 
-	 private static class HeartBeatSender extends Thread{
-		 @Override
-		 public void run(){
-			 while(true){
-				 try {
-					 Notify note=new NotifyImpl();
-					 changecord.heartBeat(myKey,note);
-					 
-					 //Send a heart beat every 200ms
-					 Thread.sleep(200);
-				 } catch (RemoteException e) {
-					 
-					 
-					 //HANDLE THE EXCEPTION BY CONNECTING TO ANOTHER CLIENT
-					 serverList.remove();
-					 makeConnectionSettings(serverList.element());
-					 e.printStackTrace(); 
-				 } catch (InterruptedException e) {
-				
-					 e.printStackTrace();
-				 }
-			 
-			 }
-		 }
-		 
-	 }
-	 
-	 @SuppressWarnings("serial")
-	 private static class NotifyImpl extends UnicastRemoteObject implements Notify{
-		 protected NotifyImpl() throws RemoteException {
-			 super();
-		 }
-
-		 @Override
-		 public void onSuccess(HashMap<String,Object> gameState) throws RemoteException {
-			 
-			 GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
-			 PlayerInfoP2P myinfo=(PlayerInfoP2P) gameState.get(myKey);
-			 int[][] gridState = new int[10][10];
-			 gridState=globalInfo.getAtomicToIntGrid();
-			 
-			 Set<String> keys = gameState.keySet();
-				int i =0, j = 0;
-				int np = (Integer) globalInfo.getNumberOfplayers();
-				int[][] cord = new int[np-1][2];
-				for(Object value : keys){
-					j = 0;
-					if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
+	
+	private  void changeServer(){
+		try {
+			synchronized (hb) {
+				hb.wait();
+			}
+			//HANDLE THE EXCEPTION BY CONNECTING TO ANOTHER CLIENT
+			serverList.remove();
+			makeConnectionSettings(serverList.element());
+			synchronized (hb) {
+				hb.notify();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private  class HeartBeatSender extends Thread{
+		@Override
+		public void run(){
+			while(true){
+				try {
+					Notify note=new NotifyImpl();
+					changecord.heartBeat(myKey,note);
 					
-						PlayerInfoP2P cordinates=(PlayerInfoP2P) gameState.get(value);
-						cord[i][j] = cordinates.getxCord();
-						j++;
-						cord[i][j] = cordinates.getyCord();
-						i++;
-					}
+					//Send a heart beat every 200ms
+					Thread.sleep(200);
+				} catch (RemoteException e) {
+					changeServer();					 
+					
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace();
 				}
-
-				board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridState,cord,np);
-			 				
-		 }
-		 
-		 @Override
-		 public void onFailure(String crashedClient,HashMap<String,Object> gameState) throws RemoteException {
-			 System.out.println(crashedClient+" crashed");
-			 GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
-			 serverList=globalInfo.getPeerIPList();
-			 
-		 }
-		 
-		 
-	 }
-
-	 public class Board extends JPanel  {
-		 
-		 private String location = "src/image.png";
-		 private int boardSize;
-		 private Image image;
-		 private int x = 10;
-		 private int y = 10;
-		 private int [][]grid;
-		 private int [][] players;
-		 private int numberPlayers;
-		 
-		 public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
-			 
-			 setFocusable(true);
-			 addKeyListener(new TAdapter());
-			 setDoubleBuffered(true);
-			 this.boardSize=boardSize;
-			 this.x = x;
-			 this.y = y;
-			 this.grid = grid2;
-			 this.players = players;
-			 this.numberPlayers = np;
-			 try {
-				 image = ImageIO.read(new File(location));
-			 } catch (IOException e) {
-				 e.printStackTrace();
-			 }
-
-
-		 }
-
-
-		 public void paint(Graphics g) {
-			 super.paint(g);
-			 Graphics2D g2d = (Graphics2D)g;
-			 g2d.setColor(Color.RED);        
-			 g2d.drawImage(image,40+y*75,40+x*75, this);
-			 for( int i = 2; i <= boardSize+2; i=i+75 ){
-				 g2d.drawLine(2, i, boardSize+2, i);
-				 g2d.drawLine(i, 2, i, boardSize+2);
-			 }
-			 for(int k=0;k<10;k++){
-				 for(int j=0;j<10;j++){
-					 g.drawString(Integer.toString(grid[k][j]),20+j*75,20+k*75);					 
-				 }	
-			 }
-			 if(numberPlayers > 1){
-				 for(int k=0; k<(numberPlayers-1);k++){
-					 int xCrd = players[k][0];
-					 int yCrd = players[k][1];
-					 g.drawString("P",20+yCrd*75,50+xCrd*75);
-					 
-				 }				 
-			 }
-
-
-		        
-			 Toolkit.getDefaultToolkit().sync();
-			 g.dispose();
-		 }
-		    
-		    
-		 public void drawAgain(int newX, int newY,int [][] newGrd,int [][] newPlayers,int newNp) {
-			 x = newX ;
-			 y = newY ;
-			 grid = newGrd;
-			 players = newPlayers;
-			 numberPlayers = newNp;
-			 
-			 repaint();  
-		    	
-		 }
-
-		 private class TAdapter extends KeyAdapter {
-			 
-			 public void keyPressed(KeyEvent e) {
-				 int key = e.getKeyCode();
-				 switch(key) { 
+				
+			}
+		}
+		
+	}
+	
+	@SuppressWarnings("serial")
+	private static class NotifyImpl extends UnicastRemoteObject implements Notify{
+		protected NotifyImpl() throws RemoteException {
+			super();
+		}
+		
+		@Override
+		public void onSuccess(HashMap<String,Object> gameState) throws RemoteException {
+			
+			GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
+			PlayerInfoP2P myinfo=(PlayerInfoP2P) gameState.get(myKey);
+			int[][] gridState = new int[10][10];
+			gridState=globalInfo.getAtomicToIntGrid();
+			
+			Set<String> keys = gameState.keySet();
+			int i =0, j = 0;
+			int np = (Integer) globalInfo.getNumberOfplayers();
+			int[][] cord = new int[np-1][2];
+			for(Object value : keys){
+				j = 0;
+				if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
+					
+					PlayerInfoP2P cordinates=(PlayerInfoP2P) gameState.get(value);
+					cord[i][j] = cordinates.getxCord();
+					j++;
+					cord[i][j] = cordinates.getyCord();
+					i++;
+				}
+			}
+			
+			board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridState,cord,np);
+			
+		}
+		
+		@Override
+		public void onFailure(String crashedClient,HashMap<String,Object> gameState) throws RemoteException {
+			System.out.println(crashedClient+" crashed");
+			GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
+			serverList=globalInfo.getPeerIPList();
+			
+		}
+		
+		
+	}
+	
+	public class Board extends JPanel  {
+		
+		private String location = "src/image.png";
+		private int boardSize;
+		private Image image;
+		private int x = 10;
+		private int y = 10;
+		private int [][]grid;
+		private int [][] players;
+		private int numberPlayers;
+		
+		public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
+			
+			setFocusable(true);
+			addKeyListener(new TAdapter());
+			setDoubleBuffered(true);
+			this.boardSize=boardSize;
+			this.x = x;
+			this.y = y;
+			this.grid = grid2;
+			this.players = players;
+			this.numberPlayers = np;
+			try {
+				image = ImageIO.read(new File(location));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			
+		}
+		
+		
+		public void paint(Graphics g) {
+			super.paint(g);
+			Graphics2D g2d = (Graphics2D)g;
+			g2d.setColor(Color.RED);        
+			g2d.drawImage(image,40+y*75,40+x*75, this);
+			for( int i = 2; i <= boardSize+2; i=i+75 ){
+				g2d.drawLine(2, i, boardSize+2, i);
+				g2d.drawLine(i, 2, i, boardSize+2);
+			}
+			for(int k=0;k<10;k++){
+				for(int j=0;j<10;j++){
+					g.drawString(Integer.toString(grid[k][j]),20+j*75,20+k*75);					 
+				}	
+			}
+			if(numberPlayers > 1){
+				for(int k=0; k<(numberPlayers-1);k++){
+					int xCrd = players[k][0];
+					int yCrd = players[k][1];
+					g.drawString("P",20+yCrd*75,50+xCrd*75);
+					
+				}				 
+			}
+			
+			
+			
+			Toolkit.getDefaultToolkit().sync();
+			g.dispose();
+		}
+		
+		
+		public void drawAgain(int newX, int newY,int [][] newGrd,int [][] newPlayers,int newNp) {
+			x = newX ;
+			y = newY ;
+			grid = newGrd;
+			players = newPlayers;
+			numberPlayers = newNp;
+			
+			repaint();  
+			
+		}
+		
+		private class TAdapter extends KeyAdapter {
+			
+			public void keyPressed(KeyEvent e) {
+				int key = e.getKeyCode();
+				switch(key) { 
 				 	case KeyEvent.VK_RIGHT: 
 				 		try {
-				 			Player.this.move("r");
+				 			Player.move("r");
 				 		} catch (InterruptedException e1) {
 				 			// TODO Auto-generated catch block
 				 			e1.printStackTrace();
 						} 
 				 		break; 
-
+						
 				 	case KeyEvent.VK_LEFT: 
 				 		try {
-				 			Player.this.move("l");
+				 			Player.move("l");
 				 		} catch (InterruptedException e1) {
 				 			// TODO Auto-generated catch block
 				 			e1.printStackTrace();
 				 		} 
 				 		break; 
-
+						
 				 	case KeyEvent.VK_UP: 
 				 		try {
-				 			Player.this.move("u");
+				 			Player.move("u");
 				 		} catch (InterruptedException e1) {
 				 			// TODO Auto-generated catch block
 				 			e1.printStackTrace();
 				 		} 
 				 		break; 
-
+						
 				 	case KeyEvent.VK_DOWN: 
 				 		try {
-				 			Player.this.move("d");
+				 			Player.move("d");
 				 		} catch (InterruptedException e1) {
 				 			// TODO Auto-generated catch block
 				 			e1.printStackTrace();
 				 		}
 				 		break; 
-				 }
-			 }
+				}
+			}
 			
-		 }
-		    
-	 }
-
+		}
+		
+	}
+	
 }

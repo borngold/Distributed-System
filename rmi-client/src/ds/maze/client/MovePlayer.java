@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.ds.maze.ChangeCoordinates;
+import com.ds.maze.CommonInfo;
 import com.ds.maze.Notify;
 import com.ds.maze.PlayerInfo;
 import com.ds.maze.PolicyFileLocator;
@@ -64,16 +65,23 @@ public class MovePlayer extends JFrame  {
 			
 			System.out.println("_________________________");
 			System.out.println("MY STATE"+"==>"+((PlayerInfo)connect.get(myKey)).toString());
-			System.out.println("NO_OF_PLAYERS"+"==>"+connect.get("NO_OF_PLAYERS"));
-			System.out.println("GRID WITH TREASURES");
-			gridSize = (Integer) (connect.get("SIZE"));
-			Set keys = connect.keySet();
+			
+			//Output the game state to player
+			CommonInfo comInfo=(CommonInfo)connect.get("COMMONINFO");
+			System.out.println("NO_OF_PLAYERS"+"==>"+comInfo.getNumberOfplayers());
+			System.out.println("TREASURES ON OFFER ==> "+comInfo.getSumOftreasures());
+			System.out.println("GRID STATE ");
+			
+			gridSize = comInfo.getGridSize();
+
+			
+			Set <String>keys = connect.keySet();
 			int i =0, j = 0;
-			int np = (Integer)(connect.get("NO_OF_PLAYERS")) ;
+			int np = comInfo.getSumOftreasures();
 			cord = new int[np][2];
 			for(Object value : keys){
 				j = 0;
-				if(!((String)value).equals(myKey) && !((String)value).equals("SIZE") && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+				if(!((String)value).equals(myKey)  && !((String)value).equals("COMMONINFO") ){
 				
 					PlayerInfo cordinates = (PlayerInfo) connect.get(value);
 					cord[i][j] = cordinates.getxCord();
@@ -82,7 +90,7 @@ public class MovePlayer extends JFrame  {
 					i++;
 				}
 			}
-			int[][] grid=(int[][]) connect.get("GRID");
+			int[][] grid=comInfo.getAtomicToIntGrid();
 			for(i=0;i<gridSize;i++){
 				for(j=0;j<gridSize;j++){
 					System.out.print(grid[i][j]+" ");
@@ -125,6 +133,7 @@ public class MovePlayer extends JFrame  {
 		
 		HashMap<String, Object> afterMove = null;
 		int[][] gridAfterMove = null;
+		CommonInfo comInfo=null;
 		try {
 			afterMove = changecord.moveToLocation(move,myKey);
 		} catch (RemoteException e) {
@@ -141,12 +150,14 @@ public class MovePlayer extends JFrame  {
  			
  		}else{
  			
+ 			 comInfo=(CommonInfo)afterMove.get("COMMONINFO");
+ 			
  			System.out.println("________AFTER MOVE__________");
 			System.out.println("MY STATE"+"==>"+afterMove.get(myKey));
-			System.out.println("NO_OF_PLAYERS"+"==>"+afterMove.get("NO_OF_PLAYERS"));
+			System.out.println("NO_OF_PLAYERS"+"==>"+comInfo.getNumberOfplayers());
 			System.out.println("GRID WITH TREASURES");
 			
-			gridAfterMove=(int[][]) afterMove.get("GRID");
+			gridAfterMove=(int[][]) comInfo.getAtomicToIntGrid();
 			for(int i=0;i<gridSize;i++){
 				for(int j=0;j<gridSize;j++){
 					System.out.print(gridAfterMove[i][j]+" ");
@@ -166,14 +177,14 @@ public class MovePlayer extends JFrame  {
 	
 	public void updateTable(HashMap<String, Object> afterMove){
  		PlayerInfo myinfo=(PlayerInfo) afterMove.get(myKey);
-    	
+ 		CommonInfo comInfo=(CommonInfo) afterMove.get("COMMONINFO");
  		Set<String> keys = afterMove.keySet();
 		int i =0, j = 0;
-		int np = (Integer) afterMove.get("NO_OF_PLAYERS") ;
+		int np = comInfo.getNumberOfplayers();
 		int[][] cord = new int[np-1][2];
 		for(Object value : keys){
 			j = 0;
-			if(!((String)value).equals(myKey) && !((String)value).equals("SIZE") &&  !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+			if(!((String)value).equals(myKey) && !(((String)value).equals("COMMONINFO"))){
 			
 				PlayerInfo cordinates=(PlayerInfo) afterMove.get(value);
 				cord[i][j] = cordinates.getxCord();
@@ -182,7 +193,9 @@ public class MovePlayer extends JFrame  {
 				i++;
 			}
 		}
-		this.board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),(int[][]) afterMove.get("GRID"),cord,np);
+		board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),(int[][]) comInfo.getAtomicToIntGrid(),cord,np);
+ 	
+ 	
 		
 	}
 	
@@ -220,12 +233,12 @@ public class MovePlayer extends JFrame  {
 		 }
 
 		 @Override
-		 public void onSuccess() throws RemoteException {
+		 public void onSuccess(HashMap<String,Object> gameState) throws RemoteException {
 			 //System.out.println("\n All players alive");				
 		 }
 		 
 		 @Override
-		 public void onFailure(String crashedClient) throws RemoteException {
+		 public void onFailure(String crashedClient,HashMap<String,Object> gameState) throws RemoteException {
 			 System.out.println(crashedClient+" crashed");
 			 
 		 }

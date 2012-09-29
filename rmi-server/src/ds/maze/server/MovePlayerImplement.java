@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ds.maze.ChangeCoordinates;
+import com.ds.maze.CommonInfo;
 import com.ds.maze.Notify;
 import com.ds.maze.PlayerInfo;
 
@@ -82,7 +83,7 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		Set keys = connectReturn.keySet();
 
 		for(Object value : keys){
-			if(!((String)value).equals(playerId) && !((String)value).equals("SIZE") && !(((String)value).equals("NO_OF_PLAYERS")) && !((String)value).equals("GRID") && !((String)value).equals("TREASURE_SUM") ){
+			if(!((String)value).equals(playerId)  && !((String)value).equals("COMMONINFO")  ){
 			
 				PlayerInfo cordinates=(PlayerInfo) connectReturn.get(value);
 				if(cordinates.getxCord() == xCord && cordinates.getyCord() == yCord){
@@ -108,7 +109,8 @@ public class MovePlayerImplement implements ChangeCoordinates {
 					atomicToIntGrid[i][j]=initGrid[i][j].get();
 			}
 			
-			connectReturn.put("GRID", atomicToIntGrid);
+			CommonInfo commonInfo=(CommonInfo) connectReturn.get("COMMONINFO");
+			commonInfo.setAtomicToIntGrid(atomicToIntGrid);
 			sumOfTreasures--;
 			if(sumOfTreasures==0){
 				trasuresExist=false;
@@ -126,11 +128,12 @@ public class MovePlayerImplement implements ChangeCoordinates {
 	public HashMap<String, Object> connectToServer(String clientKey) throws RemoteException {
 		if(CONNECT_FLAG){
 		PlayerInfo playerInfo=new PlayerInfo();
+		CommonInfo commonInfo=new CommonInfo();
 		playerInfo.setUniqueId(UNIQUE_ID);
 		playerInfo.setxCord(XCORD);
 		playerInfo.setyCord(YCORD);
 		playerInfo.setNumberOftreasures(0);
-		updateGlobalInfo(clientKey,playerInfo);
+		updateGlobalInfo(clientKey,playerInfo,commonInfo);
 		
 		//Start the thread to check for client heart beats every 10 seconds
 		Thread th=new Thread(new CheckForAndUpdateFailures());
@@ -150,13 +153,13 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		
 	}
 	
-	private void updateGlobalInfo(String playerID,PlayerInfo playerInfo){
+	private void updateGlobalInfo(String playerID,PlayerInfo playerInfo, CommonInfo commonInfo){
 		XCORD=(XCORD+7)%10;
 		YCORD=(YCORD+13)%10;
 		UNIQUE_ID++;
 		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
 		connectReturn.put(playerID, playerInfo);
-		connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
+		commonInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
 		
 		//Convert to integer before returning
 		int [][]atomicToIntGrid = new int[gridSize][gridSize];
@@ -164,9 +167,14 @@ public class MovePlayerImplement implements ChangeCoordinates {
 			for(int j=0;j<gridSize;j++)
 				atomicToIntGrid[i][j]=initGrid[i][j].get();
 		}
-		connectReturn.put("SIZE", gridSize);
-		connectReturn.put("GRID", atomicToIntGrid);
-		connectReturn.put("TREASURE_SUM",sumOfTreasures);
+		
+		//connectReturn.put("GRID", atomicToIntGrid);
+		//connectReturn.put("TREASURE_SUM",sumOfTreasures);
+		commonInfo.setGridSize(gridSize);
+		commonInfo.setAtomicToIntGrid(atomicToIntGrid);
+		commonInfo.setSumOftreasures(sumOfTreasures);
+		connectReturn.put("COMMONINFO", commonInfo);
+		
 		
 	}
 
@@ -181,10 +189,10 @@ public class MovePlayerImplement implements ChangeCoordinates {
 		}
 					
 		if(clientListLocal.get(clientKey)==-1L){
-			notify.onFailure(clientKey);
+			notify.onFailure(clientKey,connectReturn);
 		}else{
 			clientListLocal.put(clientKey, newTimeStamp);
-			notify.onSuccess();
+			notify.onSuccess(connectReturn);
 		}
 		
 	}
@@ -210,7 +218,9 @@ public class MovePlayerImplement implements ChangeCoordinates {
 					entry.setValue(-1L);
 					//update the number of players in the game
 					NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-					connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
+					//connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
+					CommonInfo commmonInfo=(CommonInfo) connectReturn.get("COMMONINFO");
+					commmonInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
 					//Remove from the global list
 					connectReturn.remove(entry.getKey());
 					

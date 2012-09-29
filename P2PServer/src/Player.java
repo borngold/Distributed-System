@@ -37,6 +37,7 @@ public class Player extends JFrame{
 	private static String firstServerIp;
 	private static String myIp;
 	private HeartBeatSender hb;
+	private static int count=0;
 	
 	public Player(){
 		
@@ -249,43 +250,35 @@ public class Player extends JFrame{
 		
 	}
 	
-	private  void changeServer(){
+	private void changeServer(){
+		
+		serverList.remove();
+		makeConnectionSettings(serverList.element());
 		try {
-			synchronized (hb) {
-				hb.wait();
-			}
-			//HANDLE THE EXCEPTION BY CONNECTING TO ANOTHER CLIENT
-			serverList.remove();
-			makeConnectionSettings(serverList.element());
-			synchronized (hb) {
-				hb.notify();
-			}
-		} catch (InterruptedException e) {
+			changecord.startBackup();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+        
 	}
 	
 	private  class HeartBeatSender extends Thread{
 		@Override
 		public void run(){
 			while(true){
+				Notify note;
 				try {
-					Notify note=new NotifyImpl();
+					note = new NotifyImpl();
 					changecord.heartBeat(myKey,note);
-					
-					//Send a heart beat every 200ms
 					Thread.sleep(200);
-				} catch (RemoteException e) {
-					changeServer();					 
 					
 				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
+				} catch (RemoteException e) {
+					changeServer();					 
 				}
-				
 			}
 		}
-		
 	}
 	
 	@SuppressWarnings("serial")
@@ -387,9 +380,6 @@ public class Player extends JFrame{
 					
 				}				 
 			}
-			
-			
-			
 			Toolkit.getDefaultToolkit().sync();
 			g.dispose();
 		}

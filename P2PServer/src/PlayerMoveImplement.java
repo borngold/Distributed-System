@@ -1,18 +1,24 @@
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.ds.maze.CommonInfo;
 import com.ds.maze.GlobalInfoP2P;
 import com.ds.maze.Notify;
 import com.ds.maze.P2PBase;
 import com.ds.maze.PlayerInfo;
 import com.ds.maze.PlayerInfoP2P;
+import com.ds.maze.PolicyFileLocator;
 
 public class PlayerMoveImplement implements P2PBase {
 	
@@ -26,6 +32,7 @@ public class PlayerMoveImplement implements P2PBase {
 	private static int sumOfTreasures;
 	private static boolean trasuresExist;
 	private static ConcurrentHashMap<String,Long> peerHeartBeatUpdate;
+	private static P2PBase backupServer;
 	
 	
 	public PlayerMoveImplement(){
@@ -42,6 +49,7 @@ public class PlayerMoveImplement implements P2PBase {
 		sumOfTreasures=0;
 		trasuresExist=true;
 		peerHeartBeatUpdate=new ConcurrentHashMap<String,Long>();
+		backupServer = null;
 		//Making the number of treasure from 0 to 4
 		Random random=new Random();
 		for(int i=0;i<10;i++){
@@ -76,17 +84,63 @@ public class PlayerMoveImplement implements P2PBase {
 		th.start();
 				
 				
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+				
+			// check to peerlist size
+			// get the second element 
+			//create registry
+			// call s to s ..
+			/*if(peerList.size() < 1){
+					return null;
+				}*/
+			int loopCount = 0;
+			String backUpIpAddr = null;
+			for(String ipaddr:peerList){
+				if(loopCount == 2)
+					break;
+				backUpIpAddr = ipaddr;
+				loopCount++;			
+					
+			}
+				
+			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
+			Registry registry = LocateRegistry.getRegistry(backUpIpAddr,9000);
+			try {
+				backupServer = (P2PBase)registry.lookup(P2PBase.SERVICE_NAME);
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			sendBackupData ();
+			CONNECT_FLAG=false;
+			return connectReturn;
+		}else{
+			return null;
+		}
+	}
+	
+	private void sendBackupData () {
+		ScheduledExecutorService executor = Executors
+	               .newSingleThreadScheduledExecutor();
+		Runnable periodicTask = new Runnable() {
+			public void run() {
+				
 				try {
-					Thread.sleep(20000);
-				} catch (InterruptedException e) {
+					backupServer.serverToServer(connectReturn, peerList,initGrid);
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				CONNECT_FLAG=false;
-				return connectReturn;
-				}else{
-					return null;
-				}
-		
+
+			}
+		};
+		executor.scheduleAtFixedRate(periodicTask, 0, 20,
+				TimeUnit.MILLISECONDS);
+			
 	}
 
 	@Override
@@ -246,6 +300,49 @@ private class CheckForAndUpdateFailures extends Thread{
 		}
 		
 	  }
+	}
+
+
+
+	public void serverToServer(HashMap<String, Object> gameState, ConcurrentLinkedQueue<String> clientList,AtomicInteger [][] gridState) throws RemoteException {	
+		connectReturn = gameState;
+		peerList = clientList; 
+		GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
+		initGrid = gridState;
+		sumOfTreasures = globalInfo.getSumOftreasures();
+		NUMBER_OF_PLAYERS.set(globalInfo.getNumberOfplayers());
+		
+	}
+
+
+	public void startBackup() throws RemoteException {
+		
+		Thread th=new Thread(new CheckForAndUpdateFailures());
+		th.start();
+		peerList.remove();
+		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+		if(peerList.size() > 1){
+			int loopCount = 0;
+			String backUpIpAddr = null;
+			for(String ipaddr:peerList){
+				if(loopCount == 2)
+					break;
+				backUpIpAddr = ipaddr;
+				loopCount++;			
+				
+			}
+			
+	        System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
+	        Registry registry = LocateRegistry.getRegistry(backUpIpAddr,9000);
+	        try {
+				backupServer = (P2PBase)registry.lookup(P2PBase.SERVICE_NAME);
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	        sendBackupData ();
+        }
+	
 	}
 
 

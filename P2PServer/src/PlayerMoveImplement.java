@@ -135,6 +135,17 @@ public class PlayerMoveImplement implements P2PBase {
 					backupServer.serverToServer(connectReturn, peerList,initGrid);
 				} catch (RemoteException e) {
 					try {
+						int loopCount = 0;
+						String backUpIpAddr = null;
+						for(String ipaddr:peerList){
+							if(loopCount == 2)
+								break;
+							backUpIpAddr = ipaddr;
+							loopCount++;			
+								
+						}
+						peerList.remove(backUpIpAddr);
+						NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
 						connectToBackup();
 					} catch (RemoteException e1) {
 						// TODO Auto-generated catch block
@@ -345,8 +356,8 @@ private class CheckForAndUpdateFailures extends Thread{
 		
 		Thread th=new Thread(new CheckForAndUpdateFailures());
 		th.start();
-		peerList.remove();
-		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+		//peerList.remove();
+		//NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
 		connectToBackup();
 	
 	}

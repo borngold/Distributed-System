@@ -59,7 +59,7 @@ public class Player extends JFrame{
 			serverList=new ConcurrentLinkedQueue<String>();
 			myKey=new ClientKeygen().genKey();
 			//For now both are the same
-			firstServerIp="172.20.10.3";
+			firstServerIp=InetAddress.getLocalHost().getHostAddress();
 			myIp=InetAddress.getLocalHost().getHostAddress();	        	
 			P2PBase engine = new PlayerMoveImplement();
 			P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);

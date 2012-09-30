@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.ds.maze.GlobalInfoP2P;
 import com.ds.maze.Notify;
 import com.ds.maze.P2PBase;
-import com.ds.maze.PlayerInfo;
 import com.ds.maze.PlayerInfoP2P;
 import com.ds.maze.PolicyFileLocator;
 
@@ -89,14 +88,23 @@ public class PlayerMoveImplement implements P2PBase {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-				
-			// check to peerlist size
-			// get the second element 
-			//create registry
-			// call s to s ..
+			
+			//There should be atleast one player to begin with.
 			/*if(peerList.size() < 1){
 					return null;
 				}*/
+			
+			connectToBackup();
+
+			CONNECT_FLAG=false;
+			return connectReturn;
+		}else{
+			return null;
+		}
+	}
+	
+	private void connectToBackup() throws RemoteException{
+		if(peerList.size() > 1){
 			int loopCount = 0;
 			String backUpIpAddr = null;
 			for(String ipaddr:peerList){
@@ -116,11 +124,8 @@ public class PlayerMoveImplement implements P2PBase {
 				e.printStackTrace();
 			}
 			sendBackupData ();
-			CONNECT_FLAG=false;
-			return connectReturn;
-		}else{
-			return null;
 		}
+		
 	}
 	
 	private void sendBackupData () {
@@ -132,8 +137,12 @@ public class PlayerMoveImplement implements P2PBase {
 				try {
 					backupServer.serverToServer(connectReturn, peerList,initGrid);
 				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					try {
+						connectToBackup();
+					} catch (RemoteException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 
 			}
@@ -321,27 +330,7 @@ private class CheckForAndUpdateFailures extends Thread{
 		th.start();
 		peerList.remove();
 		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-		if(peerList.size() > 1){
-			int loopCount = 0;
-			String backUpIpAddr = null;
-			for(String ipaddr:peerList){
-				if(loopCount == 2)
-					break;
-				backUpIpAddr = ipaddr;
-				loopCount++;			
-				
-			}
-			
-	        System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
-	        Registry registry = LocateRegistry.getRegistry(backUpIpAddr,9000);
-	        try {
-				backupServer = (P2PBase)registry.lookup(P2PBase.SERVICE_NAME);
-			} catch (NotBoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	        sendBackupData ();
-        }
+		connectToBackup();
 	
 	}
 

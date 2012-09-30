@@ -299,7 +299,7 @@ public class Player extends JFrame{
 	
 	public class Board extends JPanel  {
 		
-		private String location = "src/image.png";
+		private String location = "/image.png";
 		private int boardSize;
 		private Image image;
 		private int x = 0;
@@ -320,7 +320,7 @@ public class Player extends JFrame{
 			this.y = y;
 			this.grid = grid2;
 			try {
-				image = ImageIO.read(new File(location));
+				image = ImageIO.read(getClass().getResource(location));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

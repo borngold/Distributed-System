@@ -33,6 +33,8 @@ public class PlayerMoveImplement implements P2PBase {
 	private static P2PBase backupServer;
 	private Random randomGenerator;
 	private static int gridSize;
+	private static int count = 0;
+	
 	
 	
 	public PlayerMoveImplement(int size){
@@ -111,7 +113,7 @@ public class PlayerMoveImplement implements P2PBase {
 				loopCount++;			
 					
 			}
-				
+			System.out.println("Connecting to :"+ backUpIpAddr);	
 			System.setProperty("java.security.policy", PolicyFileLocator.getLocationOfPolicyFile());
 			Registry registry = LocateRegistry.getRegistry(backUpIpAddr,9000);
 			try {

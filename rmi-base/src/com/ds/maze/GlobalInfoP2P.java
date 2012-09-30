@@ -9,6 +9,7 @@ public class GlobalInfoP2P implements Serializable{
     private int sumOftreasures;
     private int numberOfplayers;
     private ConcurrentLinkedQueue<String> peerIPList;
+    private int gridSize;
     /**
      * @return the atomicToIntGrid
      */
@@ -57,6 +58,17 @@ public class GlobalInfoP2P implements Serializable{
     public void setPeerIPList(ConcurrentLinkedQueue<String> peerIPList) {
         this.peerIPList = peerIPList;
     }
-    
+	/**
+	 * @return the gridSize
+	 */
+	public int getGridSize() {
+		return gridSize;
+	}
+	/**
+	 * @param size the GridSize to set
+	 */
+	public void setGridSize(int size) {
+		this.gridSize = size;
+	}
 
 }

@@ -5,6 +5,7 @@ import java.rmi.registry.Registry;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,8 +24,6 @@ public class PlayerMoveImplement implements P2PBase {
 	
 	private ConcurrentLinkedQueue<String> peerList;
 	private static AtomicInteger NUMBER_OF_PLAYERS;
-	private static int XCORD;
-	private static int YCORD;
 	private static AtomicInteger[][] initGrid;
 	private static HashMap <String,Object> connectReturn;
 	private static boolean CONNECT_FLAG;
@@ -32,27 +31,28 @@ public class PlayerMoveImplement implements P2PBase {
 	private static boolean trasuresExist;
 	private static ConcurrentHashMap<String,Long> peerHeartBeatUpdate;
 	private static P2PBase backupServer;
+	private Random randomGenerator;
+	private static int gridSize;
 	
 	
-	public PlayerMoveImplement(){
-		
+	public PlayerMoveImplement(int size){
 		
 		//Instantiate all class variables	
 		peerList=new ConcurrentLinkedQueue<String>();
 		connectReturn=new HashMap<String,Object>();
 		NUMBER_OF_PLAYERS=new AtomicInteger();
-		initGrid= new AtomicInteger[10][10];
+		gridSize = size;
+		initGrid= new AtomicInteger[gridSize][gridSize];
 		CONNECT_FLAG=true;
-		XCORD=7;
-		YCORD=3;
 		sumOfTreasures=0;
 		trasuresExist=true;
 		peerHeartBeatUpdate=new ConcurrentHashMap<String,Long>();
 		backupServer = null;
+		randomGenerator = new Random();		
 		//Making the number of treasure from 0 to 4
 		Random random=new Random();
-		for(int i=0;i<10;i++){
-			for(int j=0;j<10;j++){
+		for(int i=0;i<gridSize;i++){
+			for(int j=0;j<gridSize;j++){
 				initGrid[i][j]=new AtomicInteger(random.nextInt(5)); 
 				sumOfTreasures+=initGrid[i][j].get();
 			}	
@@ -71,11 +71,8 @@ public class PlayerMoveImplement implements P2PBase {
 		
 		PlayerInfoP2P playerInfo=new PlayerInfoP2P();
 		GlobalInfoP2P globalInfo=new GlobalInfoP2P();
-		playerInfo.setxCord(XCORD);
-		playerInfo.setyCord(YCORD);
 		playerInfo.setNumberOftreasures(0);
-		playerInfo.setIpAddress(peerIp);
-		
+		playerInfo.setIpAddress(peerIp);		
 		updateGlobalInfo(clientKey,playerInfo,globalInfo);
 		
 		//Start the thread to check for client heart beats every 10 seconds
@@ -166,39 +163,55 @@ public class PlayerMoveImplement implements P2PBase {
 		PlayerInfoP2P playerInfo=	(PlayerInfoP2P) connectReturn.get(playerId);
 		int xCord=playerInfo.getxCord();
 		int yCord=playerInfo.getyCord();
-		int flag = 0;
+		boolean flag = false;
 		if(keyPressed.equalsIgnoreCase("L")){
 			if(yCord-1>=0){
-				flag = 1;
-				playerInfo.setyCord(--yCord);
+				flag = true;
+				--yCord;
 			}		
 		}else if(keyPressed.equalsIgnoreCase("R")){
 			if((yCord+1)<=9){
-				flag = 1;
-				playerInfo.setyCord(++yCord);
+				flag = true;
+				++yCord;
 			}
 			
 		}else if(keyPressed.equalsIgnoreCase( "U")){
 			if((xCord-1)>=0){
-				flag = 1;
-				playerInfo.setxCord(--xCord);				
+				flag = true;
+				--xCord;				
 			}
 			
 		}else{
 			if(xCord+1<=9){
-				flag = 1;
-				playerInfo.setxCord(++xCord);
+				flag = true;
+				++xCord;
 			}
 		}
-		if(initGrid[xCord][yCord].get()>0 && flag == 1) {
+		Set<String> keys = connectReturn.keySet();
+		for(Object value : keys){
+			if(!((String)value).equals(playerId)  && !((String)value).equals("GLOBALINFO")  ){
+			
+				PlayerInfoP2P cordinates=(PlayerInfoP2P) connectReturn.get(value);
+				if(cordinates.getxCord() == xCord && cordinates.getyCord() == yCord){
+					flag = false;
+					break;
+				}
+				
+			}
+		}
+		if(flag){
+			playerInfo.setxCord(xCord);
+			playerInfo.setyCord(yCord);
+		}
+		if(initGrid[xCord][yCord].get()>0 && flag) {
 			initGrid[xCord][yCord].set(initGrid[xCord][yCord].decrementAndGet());
 			int treasureCollected=playerInfo.getNumberOftreasures();
 			playerInfo.setNumberOftreasures(++treasureCollected);
 			connectReturn.put(playerId, playerInfo);
 			//Convert to integer before returning
-			int [][]atomicToIntGrid = new int[10][10];
-			for(int i=0;i<10;i++){
-				for(int j=0;j<10;j++)
+			int [][]atomicToIntGrid = new int[gridSize][gridSize];
+			for(int i=0;i<gridSize;i++){
+				for(int j=0;j<gridSize;j++)
 					atomicToIntGrid[i][j]=initGrid[i][j].get();
 			}
 			
@@ -239,8 +252,10 @@ long newTimeStamp=Calendar.getInstance().getTimeInMillis();
 	
 	//Private method which populates all global parameters
 	private void updateGlobalInfo(String playerID,PlayerInfoP2P playerInfo, GlobalInfoP2P globalInfo){
-		XCORD=(XCORD+7)%10;
-		YCORD=(YCORD+13)%10;
+		int XCORD = randomGenerator.nextInt(gridSize);
+		int YCORD = randomGenerator.nextInt(gridSize);
+		playerInfo.setxCord(XCORD);
+		playerInfo.setyCord(YCORD);
 		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
 		
 		connectReturn.put(playerID, playerInfo);
@@ -248,15 +263,15 @@ long newTimeStamp=Calendar.getInstance().getTimeInMillis();
 		globalInfo.setPeerIPList(peerList);
 		
 		//Convert to integer before returning
-		int [][]atomicToIntGrid = new int[10][10];
-		for(int i=0;i<10;i++){
-			for(int j=0;j<10;j++)
+		int [][]atomicToIntGrid = new int[gridSize][gridSize];
+		for(int i=0;i<gridSize;i++){
+			for(int j=0;j<gridSize;j++)
 				atomicToIntGrid[i][j]=initGrid[i][j].get();
 		}
 		
 		globalInfo.setAtomicToIntGrid(atomicToIntGrid);
 		globalInfo.setSumOftreasures(sumOfTreasures);
-		
+		globalInfo.setGridSize(gridSize);
 		//update the number of peers
 		globalInfo.setPeerIPList(peerList);
 		connectReturn.put("GLOBALINFO", globalInfo);

@@ -37,7 +37,7 @@ public class Player extends JFrame{
 	private static String firstServerIp;
 	private static String myIp;
 	private HeartBeatSender hb;
-	private static int count=0;
+	
 	
 	public Player(){
 		
@@ -58,10 +58,10 @@ public class Player extends JFrame{
 			//instantiate class variables
 			serverList=new ConcurrentLinkedQueue<String>();
 			myKey=new ClientKeygen().genKey();
-			//For now both are the same
-			firstServerIp=InetAddress.getLocalHost().getHostAddress();
+			if(firstServerIp == null)
+				firstServerIp=InetAddress.getLocalHost().getHostAddress();			
 			myIp=InetAddress.getLocalHost().getHostAddress();	        	
-			P2PBase engine = new PlayerMoveImplement();
+			P2PBase engine = new PlayerMoveImplement(5);
 			P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);
 			Registry registry = LocateRegistry.createRegistry(9000);
 			registry.rebind(P2PBase.SERVICE_NAME, engineStub);
@@ -119,7 +119,7 @@ public class Player extends JFrame{
 			//get the list of peer IPs
 			
 			serverList=globalInfo.getPeerIPList();
-			
+			int gridSize = globalInfo.getGridSize();
 			
 			Set<String> keys = connect.keySet();
 			int i =0, j = 0;
@@ -137,8 +137,8 @@ public class Player extends JFrame{
 				}
 			}
 			int[][] grid=globalInfo.getAtomicToIntGrid();
-			for(i=0;i<10;i++){
-				for(j=0;j<10;j++){
+			for(i=0;i<gridSize;i++){
+				for(j=0;j<gridSize;j++){
 					System.out.print(grid[i][j]+" ");
 				}
 				System.out.println("");
@@ -149,11 +149,11 @@ public class Player extends JFrame{
 			
 			//Wait for a second before executing the moves
 			PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);			
-			board = new Board(10*75,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
+			board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
 	        add(board);
 	        setTitle("Skeleton");
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
-	        setSize(10*77, 10*78);
+	        setSize(gridSize*77, gridSize*78);
 	        setLocationRelativeTo(null);
 	        setVisible(true);
 	        setResizable(false);
@@ -181,7 +181,8 @@ public class Player extends JFrame{
 		
 		HashMap<String, Object> afterMove = null;
 		GlobalInfoP2P globalInfo=null;
-		int[][] gridAfterMove = new int[10][10];
+		int[][] gridAfterMove = null;
+		int gridSize;
 		try {
 			afterMove = changecord.moveToLocation(move,myKey);
 		} catch (RemoteException e) {
@@ -208,10 +209,10 @@ public class Player extends JFrame{
 			System.out.println("MY STATE"+"==>"+afterMove.get(myKey));
 			System.out.println("NO_OF_PLAYERS"+"==>"+globalInfo.getNumberOfplayers());
 			System.out.println("GRID WITH TREASURES");
-			
+			gridSize = globalInfo.getGridSize();
 			gridAfterMove=(int[][]) globalInfo.getAtomicToIntGrid();
-			for(int i=0;i<10;i++){
-				for(int j=0;j<10;j++){
+			for(int i=0;i<gridSize;i++){
+				for(int j=0;j<gridSize;j++){
 					System.out.print(gridAfterMove[i][j]+" ");
 				}
 				System.out.println("");
@@ -221,11 +222,21 @@ public class Player extends JFrame{
 			System.out.println("_______END OF AFTER MOVE________");
 			
  		}	
- 		PlayerInfoP2P myinfo=(PlayerInfoP2P) afterMove.get(myKey);
+ 		
+ 		updateBoard(afterMove);
 		
- 		Set<String> keys = afterMove.keySet();
+ 		
+ 		
+ 		Thread.sleep(100);
+		
+	}
+	private static void updateBoard (HashMap<String, Object> afterMove){
 		int i =0, j = 0;
-		int np = (Integer) globalInfo.getNumberOfplayers();
+		Set<String> keys = afterMove.keySet();
+		GlobalInfoP2P globalInfo=(GlobalInfoP2P)afterMove.get("GLOBALINFO");
+		int[][] gridAfterMove = (int[][]) globalInfo.getAtomicToIntGrid();
+		PlayerInfoP2P myinfo=(PlayerInfoP2P) afterMove.get(myKey);
+		int np = globalInfo.getNumberOfplayers();
 		int[][] cord = new int[np-1][2];
 		for(Object value : keys){
 			j = 0;
@@ -239,15 +250,14 @@ public class Player extends JFrame{
 			}
 		}
 		board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridAfterMove,cord,np);
- 		
- 		Thread.sleep(100);
 		
 	}
 	
 	public static void main(String[] args) {
-		
-		new Player().startPlaying();
-		
+		if(args.length > 0)
+			firstServerIp = args[0];
+
+		new Player().startPlaying();		
 	}
 	
 	private void changeServer(){
@@ -290,28 +300,7 @@ public class Player extends JFrame{
 		@Override
 		public void onSuccess(HashMap<String,Object> gameState) throws RemoteException {
 			
-			GlobalInfoP2P globalInfo=(GlobalInfoP2P)gameState.get("GLOBALINFO");
-			PlayerInfoP2P myinfo=(PlayerInfoP2P) gameState.get(myKey);
-			int[][] gridState = new int[10][10];
-			gridState=globalInfo.getAtomicToIntGrid();
-			
-			Set<String> keys = gameState.keySet();
-			int i =0, j = 0;
-			int np = (Integer) globalInfo.getNumberOfplayers();
-			int[][] cord = new int[np-1][2];
-			for(Object value : keys){
-				j = 0;
-				if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
-					
-					PlayerInfoP2P cordinates=(PlayerInfoP2P) gameState.get(value);
-					cord[i][j] = cordinates.getxCord();
-					j++;
-					cord[i][j] = cordinates.getyCord();
-					i++;
-				}
-			}
-			
-			board.drawAgain(myinfo.getxCord(),myinfo.getyCord(),gridState,cord,np);
+			updateBoard(gameState);
 			
 		}
 		
@@ -331,18 +320,20 @@ public class Player extends JFrame{
 		private String location = "src/image.png";
 		private int boardSize;
 		private Image image;
-		private int x = 10;
-		private int y = 10;
+		private int x = 0;
+		private int y = 0;
 		private int [][]grid;
 		private int [][] players;
 		private int numberPlayers;
+		private int gridSize;
 		
 		public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
 			
 			setFocusable(true);
 			addKeyListener(new TAdapter());
 			setDoubleBuffered(true);
-			this.boardSize=boardSize;
+			this.gridSize = boardSize;
+			this.boardSize=boardSize*75;
 			this.x = x;
 			this.y = y;
 			this.grid = grid2;
@@ -367,8 +358,8 @@ public class Player extends JFrame{
 				g2d.drawLine(2, i, boardSize+2, i);
 				g2d.drawLine(i, 2, i, boardSize+2);
 			}
-			for(int k=0;k<10;k++){
-				for(int j=0;j<10;j++){
+			for(int k=0;k<gridSize;k++){
+				for(int j=0;j<gridSize;j++){
 					g.drawString(Integer.toString(grid[k][j]),20+j*75,20+k*75);					 
 				}	
 			}
@@ -390,8 +381,7 @@ public class Player extends JFrame{
 			y = newY ;
 			grid = newGrd;
 			players = newPlayers;
-			numberPlayers = newNp;
-			
+			numberPlayers = newNp;			
 			repaint();  
 			
 		}

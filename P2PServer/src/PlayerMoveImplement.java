@@ -161,8 +161,10 @@ public class PlayerMoveImplement implements P2PBase {
 				
 			}
 		PlayerInfoP2P playerInfo=	(PlayerInfoP2P) connectReturn.get(playerId);
+		GlobalInfoP2P globalInfo=(GlobalInfoP2P) connectReturn.get("GLOBALINFO");
 		int xCord=playerInfo.getxCord();
 		int yCord=playerInfo.getyCord();
+		int gridSize = globalInfo.getGridSize();
 		boolean flag = false;
 		if(keyPressed.equalsIgnoreCase("L")){
 			if(yCord-1>=0){
@@ -170,7 +172,7 @@ public class PlayerMoveImplement implements P2PBase {
 				--yCord;
 			}		
 		}else if(keyPressed.equalsIgnoreCase("R")){
-			if((yCord+1)<=9){
+			if((yCord+1)<=gridSize-1){
 				flag = true;
 				++yCord;
 			}
@@ -182,7 +184,7 @@ public class PlayerMoveImplement implements P2PBase {
 			}
 			
 		}else{
-			if(xCord+1<=9){
+			if(xCord+1<=gridSize-1){
 				flag = true;
 				++xCord;
 			}
@@ -215,14 +217,14 @@ public class PlayerMoveImplement implements P2PBase {
 					atomicToIntGrid[i][j]=initGrid[i][j].get();
 			}
 			
-			GlobalInfoP2P globalInfo=(GlobalInfoP2P) connectReturn.get("GLOBALINFO");
 			globalInfo.setAtomicToIntGrid(atomicToIntGrid);
 			sumOfTreasures--;
+			globalInfo.setSumOftreasures(sumOfTreasures);
 			if(sumOfTreasures==0){
 				trasuresExist=false;
 			}
 		}
-		
+		connectReturn.put("GLOBALINFO", globalInfo);
 		return connectReturn;
 		}else{
 			return null;

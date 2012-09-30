@@ -61,7 +61,7 @@ public class Player extends JFrame{
 			if(firstServerIp == null)
 				firstServerIp=InetAddress.getLocalHost().getHostAddress();			
 			myIp=InetAddress.getLocalHost().getHostAddress();	        	
-			P2PBase engine = new PlayerMoveImplement(5);
+			P2PBase engine = new PlayerMoveImplement(10);
 			P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);
 			Registry registry = LocateRegistry.createRegistry(9000);
 			registry.rebind(P2PBase.SERVICE_NAME, engineStub);
@@ -99,7 +99,6 @@ public class Player extends JFrame{
 		try {
 			
 			makeConnectionSettings(firstServerIp);
-			int [][] cord;		
 			HashMap<String, Object> connect=changecord.connectToServer(myKey,myIp);
 			if(connect==null){
 				System.out.println("The game has already started please try again later...");
@@ -120,44 +119,24 @@ public class Player extends JFrame{
 			
 			serverList=globalInfo.getPeerIPList();
 			int gridSize = globalInfo.getGridSize();
-			
-			Set<String> keys = connect.keySet();
-			int i =0, j = 0;
-			int np = (Integer)(globalInfo.getNumberOfplayers()) ;
-			cord = new int[np][2];
-			for(Object value : keys){
-				j = 0;
-				if(!((String)value).equals(myKey) && !(((String)value).equals("GLOBALINFO"))){
-					
-					PlayerInfoP2P cordinates=(PlayerInfoP2P) connect.get(value);
-					cord[i][j] = cordinates.getxCord();
-					j++;
-					cord[i][j] = cordinates.getyCord();
-					i++;
-				}
-			}
 			int[][] grid=globalInfo.getAtomicToIntGrid();
-			for(i=0;i<gridSize;i++){
-				for(j=0;j<gridSize;j++){
-					System.out.print(grid[i][j]+" ");
-				}
-				System.out.println("");
-			}
+			
+
 			
 			
 			System.out.println("_________________________");
 			
 			//Wait for a second before executing the moves
 			PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);			
-			board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid,cord,np);
+			board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid);
 	        add(board);
-	        setTitle("Skeleton");
+	        setTitle("Maze Game");
 	        setDefaultCloseOperation(EXIT_ON_CLOSE);
 	        setSize(gridSize*77, gridSize*78);
 	        setLocationRelativeTo(null);
 	        setVisible(true);
 	        setResizable(false);
-			
+			updateBoard(connect);
 			System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
 			
 			//Once connection has been successfully established, start sending periodic heart beats to the server
@@ -187,10 +166,13 @@ public class Player extends JFrame{
 			afterMove = changecord.moveToLocation(move,myKey);
 		} catch (RemoteException e) {
 			
-			
-			//HANDLE THE CONNECTION LOSS EXCEPTION BY CONNECTING TO THE FIRST IN THE LIST OF AVAILABLE SERVERS
-			serverList.remove();
-			makeConnectionSettings(serverList.element());
+			changeServer();
+			try {
+				afterMove = changecord.moveToLocation(move,myKey);
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}	
 			
 			e.printStackTrace();
 		}
@@ -260,7 +242,7 @@ public class Player extends JFrame{
 		new Player().startPlaying();		
 	}
 	
-	private void changeServer(){
+	private static void changeServer(){
 		
 		serverList.remove();
 		makeConnectionSettings(serverList.element());
@@ -327,7 +309,7 @@ public class Player extends JFrame{
 		private int numberPlayers;
 		private int gridSize;
 		
-		public Board(int boardSize,int x, int y, int[][] grid2,int [][] players,int np) {
+		public Board(int boardSize,int x, int y, int[][] grid2) {
 			
 			setFocusable(true);
 			addKeyListener(new TAdapter());
@@ -337,8 +319,6 @@ public class Player extends JFrame{
 			this.x = x;
 			this.y = y;
 			this.grid = grid2;
-			this.players = players;
-			this.numberPlayers = np;
 			try {
 				image = ImageIO.read(new File(location));
 			} catch (IOException e) {

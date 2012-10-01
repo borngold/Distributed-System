@@ -148,7 +148,9 @@ public class PlayerMoveImplement implements P2PBase {
 						}
 						peerList.remove(backUpIpAddr);
 						NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-						connectToBackup();
+						if(NUMBER_OF_PLAYERS.get() > 1){
+								connectToBackup();
+						}
 					} catch (RemoteException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();

@@ -319,16 +319,18 @@ private class CheckForAndUpdateFailures extends Thread{
 				
 				if((currentTimeStamp-entry.getValue()) > UPDATE_INTERVAL){
 					entry.setValue(-1L);
-					//update the number of players in the game
-					NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+							
 					//connectReturn.put("NO_OF_PLAYERS", NUMBER_OF_PLAYERS.get());
 					GlobalInfoP2P globalInfo=(GlobalInfoP2P) connectReturn.get("GLOBALINFO");
-					globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
 					//Remove from the global list and also update the peer list queue
 					PlayerInfoP2P playerInfo=(PlayerInfoP2P) connectReturn.get(entry.getKey());
-					peerList.remove(playerInfo.getIpAddress());
+					if(peerList.remove(playerInfo.getIpAddress()))
+						NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());						
 					globalInfo.setPeerIPList(peerList);
+					globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
+					connectReturn.put("GLOBALINFO",globalInfo);
 					connectReturn.remove(entry.getKey());
+					
 					
 				}
 			}

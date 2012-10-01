@@ -161,7 +161,6 @@ public class Player extends JFrame{
 				};
 				
 				try {
-					UnicastRemoteObject.exportObject(connect);
 					changecord.connectToServer(myKey,myIp,connect);
 		} catch (RemoteException e) {
 			//serverList.remove();

@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.ds.maze.ClientConnect;
 import com.ds.maze.GlobalInfoP2P;
 import com.ds.maze.Notify;
 import com.ds.maze.P2PBase;
@@ -65,7 +66,7 @@ public class PlayerMoveImplement implements P2PBase {
 	}
 
 	@Override
-	public HashMap<String, Object> connectToServer(String clientKey, String peerIp)
+	public void connectToServer(String clientKey, String peerIp, ClientConnect connect)
 			throws RemoteException {
 		if(CONNECT_FLAG){
 		//Maintain a list of all available servers
@@ -96,11 +97,13 @@ public class PlayerMoveImplement implements P2PBase {
 				}*/
 			
 			connectToBackup();
-
-			CONNECT_FLAG=false;
-			return connectReturn;
+			
+			connect.onSuccess(connectReturn);
+			
 		}else{
-			return null;
+			
+			connect.onFailure();
+			
 		}
 	}
 	

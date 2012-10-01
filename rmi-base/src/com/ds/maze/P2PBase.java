@@ -10,15 +10,15 @@ public interface P2PBase extends Remote {
 	
 public static final String SERVICE_NAME = "PEERIMPLEMENT"; 
 	
-	HashMap<String, Object> connectToServer(String clientKey, String peerIp) throws RemoteException;
+	public void connectToServer(String clientKey, String peerIp,ClientConnect connect) throws RemoteException;
 	
-	HashMap<String, Object> moveToLocation(String keyPressed, String playerId) throws RemoteException;
+	public HashMap<String, Object> moveToLocation(String keyPressed, String playerId) throws RemoteException;
 	
-	void serverToServer(HashMap<String, Object> gameState, ConcurrentLinkedQueue<String> clientList,AtomicInteger [][] gridState) throws RemoteException;
+	public void serverToServer(HashMap<String, Object> gameState, ConcurrentLinkedQueue<String> clientList,AtomicInteger [][] gridState) throws RemoteException;
 	
-	void startBackup() throws RemoteException;
+	public void startBackup() throws RemoteException;
 	
-	void heartBeat(String myKey, Notify notify) throws RemoteException; //To check whether the client is alive
+	public void heartBeat(String myKey, Notify notify) throws RemoteException; //To check whether the client is alive
 
 
 }

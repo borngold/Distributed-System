@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import com.ds.maze.ClientConnect;
 import com.ds.maze.GlobalInfoP2P;
 import com.ds.maze.Notify;
 import com.ds.maze.P2PBase;
@@ -99,58 +101,75 @@ public class Player extends JFrame{
 		try {
 			
 			makeConnectionSettings(firstServerIp);
-			HashMap<String, Object> connect=changecord.connectToServer(myKey,myIp);
-			if(connect==null){
-				System.out.println("The game has already started please try again later...");
-				System.exit(0);
-				
-			}
 			
-			//Print the current state 
-			GlobalInfoP2P globalInfo=(GlobalInfoP2P)connect.get("GLOBALINFO");
-			
-			System.out.println("_________________________");
-			System.out.println("MY STATE"+"==>"+((PlayerInfoP2P)connect.get(myKey)).toString());
-			System.out.println("NO_OF_PLAYERS"+"==>"+globalInfo.getNumberOfplayers());
-			System.out.println("TREASURES ON OFFER ==> "+globalInfo.getSumOftreasures());
-			System.out.println("GRID WITH TREASURES");
-			
-			//get the list of peer IPs
-			
-			serverList=globalInfo.getPeerIPList();
-			int gridSize = globalInfo.getGridSize();
-			int[][] grid=globalInfo.getAtomicToIntGrid();
-			
+			ClientConnect connect=new ClientConnect(){
 
+				@Override
+				public void onSuccess(HashMap<String, Object> connect)
+						throws RemoteException {
+										
+					//Print the current state 
+					GlobalInfoP2P globalInfo=(GlobalInfoP2P)connect.get("GLOBALINFO");
+					
+					System.out.println("_________________________");
+					System.out.println("MY STATE"+"==>"+((PlayerInfoP2P)connect.get(myKey)).toString());
+					System.out.println("NO_OF_PLAYERS"+"==>"+globalInfo.getNumberOfplayers());
+					System.out.println("TREASURES ON OFFER ==> "+globalInfo.getSumOftreasures());
+					System.out.println("GRID WITH TREASURES");
+					
+					//get the list of peer IPs
+					
+					serverList=globalInfo.getPeerIPList();
+					int gridSize = globalInfo.getGridSize();
+					int[][] grid=globalInfo.getAtomicToIntGrid();
+					
+
+					
+					
+					System.out.println("_________________________");
+					
+					//Wait for a second before executing the moves
+					PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);			
+					board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid);
+			        add(board);
+			        setTitle("Maze Game");
+			        setDefaultCloseOperation(EXIT_ON_CLOSE);
+			        setSize(gridSize*77, gridSize*78);
+			        setLocationRelativeTo(null);
+			        setVisible(true);
+			        setResizable(false);
+					updateBoard(connect);
+					System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
+					
+					//Once connection has been successfully established, start sending periodic heart beats to the server
+					hb=new HeartBeatSender();
+					
+					Thread heartbeat=new Thread(hb);   
+					heartbeat.setDaemon(true);
+					heartbeat.start();
+									
+					
+				}
+
+				@Override
+				public void onFailure()
+						throws RemoteException {
+					System.out.println("The game has already started please try again later...");
+					System.exit(0);
+					
+					
+				}
+				
+				
+				};
 			
-			
-			System.out.println("_________________________");
-			
-			//Wait for a second before executing the moves
-			PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);			
-			board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid);
-	        add(board);
-	        setTitle("Maze Game");
-	        setDefaultCloseOperation(EXIT_ON_CLOSE);
-	        setSize(gridSize*77, gridSize*78);
-	        setLocationRelativeTo(null);
-	        setVisible(true);
-	        setResizable(false);
-			updateBoard(connect);
-			System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
-			
-			//Once connection has been successfully established, start sending periodic heart beats to the server
-			hb=new HeartBeatSender();
-			
-			Thread heartbeat=new Thread(hb);   
-			heartbeat.setDaemon(true);
-			heartbeat.start();
+			changecord.connectToServer(myKey,myIp,connect);
 		} catch (RemoteException e) {
 			serverList.remove();
 			makeConnectionSettings(serverList.element());
 			e.printStackTrace();
 		}
-        
+			
 		
 	}
 	

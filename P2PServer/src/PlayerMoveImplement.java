@@ -358,8 +358,11 @@ private class CheckForAndUpdateFailures extends Thread{
 		
 		Thread th=new Thread(new CheckForAndUpdateFailures());
 		th.start();
-		//peerList.remove();
-		//NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+		if(count == 0){
+			peerList.remove();
+			NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+			count++;
+		}
 		connectToBackup();
 	
 	}

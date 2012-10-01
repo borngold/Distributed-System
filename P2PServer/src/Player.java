@@ -98,7 +98,7 @@ public class Player extends JFrame{
 	
 	
 	public void startPlaying() {
-		try {
+		
 			
 			makeConnectionSettings(firstServerIp);
 			
@@ -108,6 +108,7 @@ public class Player extends JFrame{
 				public void onSuccess(HashMap<String, Object> connect)
 						throws RemoteException {
 										
+					System.out.println("I am here");
 					//Print the current state 
 					GlobalInfoP2P globalInfo=(GlobalInfoP2P)connect.get("GLOBALINFO");
 					
@@ -122,9 +123,7 @@ public class Player extends JFrame{
 					serverList=globalInfo.getPeerIPList();
 					int gridSize = globalInfo.getGridSize();
 					int[][] grid=globalInfo.getAtomicToIntGrid();
-					
-
-					
+										
 					
 					System.out.println("_________________________");
 					
@@ -147,7 +146,6 @@ public class Player extends JFrame{
 					Thread heartbeat=new Thread(hb);   
 					heartbeat.setDaemon(true);
 					heartbeat.start();
-									
 					
 				}
 
@@ -160,13 +158,14 @@ public class Player extends JFrame{
 					
 				}
 				
-				
 				};
-			
-			changecord.connectToServer(myKey,myIp,connect);
+				
+				try {
+					UnicastRemoteObject.exportObject(connect);
+					changecord.connectToServer(myKey,myIp,connect);
 		} catch (RemoteException e) {
-			serverList.remove();
-			makeConnectionSettings(serverList.element());
+			//serverList.remove();
+			//makeConnectionSettings(serverList.element());
 			e.printStackTrace();
 		}
 			

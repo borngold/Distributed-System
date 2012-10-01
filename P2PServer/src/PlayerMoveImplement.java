@@ -35,6 +35,8 @@ public class PlayerMoveImplement implements P2PBase {
 	private static int gridSize;
 	private static int count = 0;
 	
+	//Checking commit
+	
 	
 	
 	public PlayerMoveImplement(int size){

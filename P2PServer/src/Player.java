@@ -5,7 +5,6 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.AccessException;
@@ -29,9 +28,13 @@ import com.ds.maze.PlayerInfoP2P;
 import com.ds.maze.PolicyFileLocator;
 
 
-@SuppressWarnings("serial")
 public class Player extends JFrame{
 	
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -565915827762949662L;
 	private static Board board;
 	private static P2PBase changecord;
 	private static ConcurrentLinkedQueue<String> serverList;
@@ -99,75 +102,95 @@ public class Player extends JFrame{
 	
 	public void startPlaying() {
 		
-			
-			makeConnectionSettings(firstServerIp);
-			
-			ClientConnect connect=new ClientConnect(){
-
-				@Override
-				public void onSuccess(HashMap<String, Object> connect)
-						throws RemoteException {
-										
-					System.out.println("I am here");
-					//Print the current state 
-					GlobalInfoP2P globalInfo=(GlobalInfoP2P)connect.get("GLOBALINFO");
-					
-					System.out.println("_________________________");
-					System.out.println("MY STATE"+"==>"+((PlayerInfoP2P)connect.get(myKey)).toString());
-					System.out.println("NO_OF_PLAYERS"+"==>"+globalInfo.getNumberOfplayers());
-					System.out.println("TREASURES ON OFFER ==> "+globalInfo.getSumOftreasures());
-					System.out.println("GRID WITH TREASURES");
-					
-					//get the list of peer IPs
-					
-					serverList=globalInfo.getPeerIPList();
-					int gridSize = globalInfo.getGridSize();
-					int[][] grid=globalInfo.getAtomicToIntGrid();
-										
-					
-					System.out.println("_________________________");
-					
-					//Wait for a second before executing the moves
-					PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);			
-					board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid);
-			        add(board);
-			        setTitle("Maze Game");
-			        setDefaultCloseOperation(EXIT_ON_CLOSE);
-			        setSize(gridSize*77, gridSize*78);
-			        setLocationRelativeTo(null);
-			        setVisible(true);
-			        setResizable(false);
-					updateBoard(connect);
-					System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
-					
-					//Once connection has been successfully established, start sending periodic heart beats to the server
-					hb=new HeartBeatSender();
-					
-					Thread heartbeat=new Thread(hb);   
-					heartbeat.setDaemon(true);
-					heartbeat.start();
-					
-				}
-
-				@Override
-				public void onFailure()
-						throws RemoteException {
-					System.out.println("The game has already started please try again later...");
-					System.exit(0);
-					
-					
-				}
+		
+		makeConnectionSettings(firstServerIp);
+		
+		ClientConnect connect = null;
+		try {
+			connect = new ConnectImpl();
+		} catch (RemoteException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 				
-				};
-				
-				try {
-					changecord.connectToServer(myKey,myIp,connect);
+		try {
+			changecord.connectToServer(myKey,myIp,connect);
 		} catch (RemoteException e) {
-			//serverList.remove();
-			//makeConnectionSettings(serverList.element());
 			e.printStackTrace();
 		}
 			
+		
+	}
+	
+	@SuppressWarnings("serial")
+	private  class ConnectImpl extends UnicastRemoteObject implements ClientConnect{
+		protected ConnectImpl() throws RemoteException {
+			super();
+		}
+		
+		@Override
+
+		public void onSuccess(HashMap<String, Object> connect)
+				throws RemoteException {										
+				Player.this.createBoard(connect);
+				System.out.println("i got the callback");
+		}
+		
+		public void onFailure()
+				throws RemoteException {
+			System.out.println("The game has already started please try again later...");
+			System.exit(0);				
+				
+		}
+		
+		
+	}
+	
+	public void createBoard(HashMap <String,Object>connect){
+		//Print the current state 
+		GlobalInfoP2P globalInfo=(GlobalInfoP2P)connect.get("GLOBALINFO");
+		
+		System.out.println("_________________________");
+		System.out.println("MY STATE"+"==>"+((PlayerInfoP2P)connect.get(myKey)).toString());
+		System.out.println("NO_OF_PLAYERS"+"==>"+globalInfo.getNumberOfplayers());
+		System.out.println("TREASURES ON OFFER ==> "+globalInfo.getSumOftreasures());
+		System.out.println("GRID WITH TREASURES");
+		
+		//get the list of peer IPs
+		
+		serverList=globalInfo.getPeerIPList();
+		int gridSize = globalInfo.getGridSize();
+		int[][] grid=globalInfo.getAtomicToIntGrid();
+		int i,j;
+		for(i=0;i<gridSize;i++){
+			for(j=0;j<gridSize;j++){
+				System.out.print(grid[i][j]+" ");
+			}
+			System.out.println("");
+		}							
+		
+		System.out.println("_________________________");
+		
+		//Wait for a second before executing the moves
+		
+		PlayerInfoP2P myinfo=(PlayerInfoP2P) connect.get(myKey);
+		board = new Board(gridSize,myinfo.getxCord(),myinfo.getyCord(),grid);
+        add(board);
+        setTitle("Maze Game");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(gridSize*77, gridSize*78);
+        setLocationRelativeTo(null);
+        setVisible(true);
+        setResizable(false);
+		updateBoard(connect);
+		System.out.println("Please start moving. Enter L/l for LEFT, R/r for RIGHT, U/u for UP and any key for DOWN ");
+		
+		//Once connection has been successfully established, start sending periodic heart beats to the server
+		hb=new HeartBeatSender();
+		
+		Thread heartbeat=new Thread(hb);   
+		heartbeat.setDaemon(true);
+		heartbeat.start();
 		
 	}
 	
@@ -316,6 +339,10 @@ public class Player extends JFrame{
 	
 	public class Board extends JPanel  {
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2908144287681621029L;
 		private String location = "/image.png";
 		private int boardSize;
 		private Image image;

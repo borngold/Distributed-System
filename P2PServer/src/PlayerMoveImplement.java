@@ -34,10 +34,8 @@ public class PlayerMoveImplement implements P2PBase {
 	private static P2PBase backupServer;
 	private Random randomGenerator;
 	private static int gridSize;
-	private static int count = 0;
-	
-	//Checking commit
-	
+	private boolean counter;
+	private Object lock = new Object();
 	
 	
 	public PlayerMoveImplement(int size){
@@ -53,6 +51,7 @@ public class PlayerMoveImplement implements P2PBase {
 		trasuresExist=true;
 		peerHeartBeatUpdate=new ConcurrentHashMap<String,Long>();
 		backupServer = null;
+		counter = false;	
 		randomGenerator = new Random();		
 		//Making the number of treasure from 0 to 4
 		Random random=new Random();
@@ -69,35 +68,32 @@ public class PlayerMoveImplement implements P2PBase {
 	public void connectToServer(String clientKey, String peerIp, ClientConnect connect)
 			throws RemoteException {
 		if(CONNECT_FLAG){
-		//Maintain a list of all available servers
-		peerList.add(peerIp);
+			//Maintain a list of all available servers
+			peerList.add(peerIp);
 		
-		//Instantiate the Global and Player Info beans to update the information as players connect
+			//Instantiate the Global and Player Info beans to update the information as players connect
 		
-		PlayerInfoP2P playerInfo=new PlayerInfoP2P();
-		GlobalInfoP2P globalInfo=new GlobalInfoP2P();
-		playerInfo.setNumberOftreasures(0);
-		playerInfo.setIpAddress(peerIp);		
-		updateGlobalInfo(clientKey,playerInfo,globalInfo);
-		
-		//Start the thread to check for client heart beats every 10 seconds
-		Thread th=new Thread(new CheckForAndUpdateFailures());
-		th.start();
-				
-				
-			try {
-				Thread.sleep(20000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			PlayerInfoP2P playerInfo=new PlayerInfoP2P();
+			GlobalInfoP2P globalInfo=new GlobalInfoP2P();
+			playerInfo.setNumberOftreasures(0);
+			playerInfo.setIpAddress(peerIp);	
+			NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
+			updateGlobalInfo(clientKey,playerInfo,globalInfo);
+			if(NUMBER_OF_PLAYERS.get() == 1){
+				//Start the thread to check for client heart beats every 10 seconds
+				Thread waiting = new Thread(new waitThread());
+				waiting.start();
 			}
 			
-			//There should be atleast one player to begin with.
-			/*if(peerList.size() < 1){
-					return null;
-				}*/
-			
-			connectToBackup();
-			
+			synchronized (lock) {
+			    try {
+					lock.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+				
 			connect.onSuccess(connectReturn);
 			
 		}else{
@@ -105,6 +101,36 @@ public class PlayerMoveImplement implements P2PBase {
 			connect.onFailure();
 			
 		}
+	}
+	
+	private class waitThread implements Runnable {
+		
+		public void run() {
+			try {
+				Thread.sleep(20000);
+				
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Thread th=new Thread(new CheckForAndUpdateFailures());
+			th.start();
+			try {
+				connectToBackup();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			CONNECT_FLAG = false;
+			
+			NotifyWait();
+		}
+		public synchronized void NotifyWait() {
+	
+			synchronized (lock) {
+			    lock.notifyAll();
+			}
+	    }
 	}
 	
 	private void connectToBackup() throws RemoteException{
@@ -278,7 +304,7 @@ long newTimeStamp=Calendar.getInstance().getTimeInMillis();
 		int YCORD = randomGenerator.nextInt(gridSize);
 		playerInfo.setxCord(XCORD);
 		playerInfo.setyCord(YCORD);
-		NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
+		
 		
 		connectReturn.put(playerID, playerInfo);
 		globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
@@ -367,10 +393,10 @@ private class CheckForAndUpdateFailures extends Thread{
 		
 		Thread th=new Thread(new CheckForAndUpdateFailures());
 		th.start();
-		if(count == 0){
+		if(!counter){
 			peerList.remove();
 			NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-			count++;
+			counter = true;
 		}
 		connectToBackup();
 	

@@ -176,6 +176,11 @@ public class PlayerMoveImplement implements P2PBase {
 						}
 						peerList.remove(backUpIpAddr);
 						NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+						connectReturn.remove(backUpIpAddr);
+						GlobalInfoP2P globalInfo=(GlobalInfoP2P) connectReturn.get("GLOBALINFO");
+						globalInfo.setPeerIPList(peerList);
+						globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
+						connectReturn.put("GLOBALINFO",globalInfo);
 						if(NUMBER_OF_PLAYERS.get() > 1){
 								connectToBackup();
 						}
@@ -394,6 +399,10 @@ private class CheckForAndUpdateFailures extends Thread{
 				String primaddr = peerList.remove();
 				NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
 				connectReturn.remove(primaddr);
+				GlobalInfoP2P globalInfo=(GlobalInfoP2P) connectReturn.get("GLOBALINFO");
+				globalInfo.setPeerIPList(peerList);
+				globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
+				connectReturn.put("GLOBALINFO",globalInfo);				
 				connectToBackup();	
 				Thread th=new Thread(new CheckForAndUpdateFailures()); 
 				th.start();

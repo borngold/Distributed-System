@@ -284,23 +284,26 @@ public class Player extends JFrame {
 
    private static void updateBoard(HashMap<String, Object> afterMove) {
       int i = 0, j = 0;
+      int [][] cord = null;
       Set<String> keys = afterMove.keySet();
       GlobalInfoP2P globalInfo = (GlobalInfoP2P) afterMove.get("GLOBALINFO");
       int[][] gridAfterMove = (int[][]) globalInfo.getAtomicToIntGrid();
       PlayerInfoP2P myinfo = (PlayerInfoP2P) afterMove.get(myKey);
       int np = globalInfo.getNumberOfplayers();
-      int[][] cord = new int[np - 1][2];
-      for (Object value : keys) {
-         j = 0;
-         if (!((String) value).equals(myKey)
-               && !(((String) value).equals("GLOBALINFO"))) {
-
-            PlayerInfoP2P cordinates = (PlayerInfoP2P) afterMove.get(value);
-            cord[i][j] = cordinates.getxCord();
-            j++;
-            cord[i][j] = cordinates.getyCord();
-            i++;
-         }
+      if(np > 1){
+	      cord = new int[np - 1][2];
+	      for (Object value : keys) {
+	         j = 0;
+	         if (!((String) value).equals(myKey)
+	               && !(((String) value).equals("GLOBALINFO"))) {
+	
+	            PlayerInfoP2P cordinates = (PlayerInfoP2P) afterMove.get(value);
+	            cord[i][j] = cordinates.getxCord();
+	            j++;
+	            cord[i][j] = cordinates.getyCord();
+	            i++;
+	         }
+	      }
       }
       board.drawAgain(myinfo.getxCord(), myinfo.getyCord(), gridAfterMove,
             cord, np);

@@ -50,8 +50,12 @@ public class Player extends JFrame {
    private HeartBeatSender hb;
 
    /**
-    * Constructor
+    * 
+    * @param bsize Board size
+    * @param ipaddr Ip address of the first server
+    * Repaints the board whenever update is received from the server
     */
+   
    public Player(int bsize,String ipaddr) {
 
       /*
@@ -95,7 +99,7 @@ public class Player extends JFrame {
 
    }
 
-   /*
+   /**
     * This method is responsible for handling the connections to the server
     */
 
@@ -230,6 +234,14 @@ public class Player extends JFrame {
       heartbeat.start();
 
    }
+   
+   
+   /**
+    * 
+    * @param move
+    * @throws InterruptedException
+    * Called by the AWT board implementation to invoke the RMI method for move 
+    */
 
    private void move(String move) throws InterruptedException {
 
@@ -285,6 +297,15 @@ public class Player extends JFrame {
       Thread.sleep(100);
 
    }
+   
+   
+   
+   /**
+    * 
+    * @param afterMove
+    * 
+    * Repaints the board whenever update is received from the server
+    */
 
    private void updateBoard(HashMap<String, Object> afterMove) {
       int i = 0, j = 0;
@@ -348,6 +369,13 @@ public class Player extends JFrame {
       }
 
    }
+   
+   /**
+    * 
+    * Daemon thread which continuously queries the server for the game 
+    * state and also lets it know that player is alive
+    *
+    */
 
    private class HeartBeatSender extends Thread {
       @Override
@@ -465,7 +493,7 @@ public class Player extends JFrame {
          g.dispose();
       }
 
-      /*
+      /**
        * Responsible for continuously painting the board to update the player of
        * the ever changing game state
        */
@@ -480,6 +508,12 @@ public class Player extends JFrame {
          repaint();
 
       }
+      
+      /**
+       * 
+       * Event listener class for detecting the key press for player move
+       *
+       */
 
       private class TAdapter extends KeyAdapter {
 

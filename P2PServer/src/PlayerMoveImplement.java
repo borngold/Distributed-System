@@ -1,3 +1,5 @@
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -34,7 +36,6 @@ public class PlayerMoveImplement implements P2PBase {
 	private static P2PBase backupServer;
 	private Random randomGenerator;
 	private static int gridSize;
-	private boolean counter;
 	private Object lock = new Object();
 	
 	
@@ -51,7 +52,6 @@ public class PlayerMoveImplement implements P2PBase {
 		trasuresExist=true;
 		peerHeartBeatUpdate=new ConcurrentHashMap<String,Long>();
 		backupServer = null;
-		counter = false;	
 		randomGenerator = new Random();		
 		//Making the number of treasure from 0 to 4
 		Random random=new Random();
@@ -65,7 +65,7 @@ public class PlayerMoveImplement implements P2PBase {
 	}
 
 	@Override
-	public void connectToServer(String clientKey, String peerIp, ClientConnect connect)
+	public void connectToServer(String peerIp, ClientConnect connect)
 			throws RemoteException {
 		if(CONNECT_FLAG){
 			//Maintain a list of all available servers
@@ -78,7 +78,7 @@ public class PlayerMoveImplement implements P2PBase {
 			playerInfo.setNumberOftreasures(0);
 			playerInfo.setIpAddress(peerIp);	
 			NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.incrementAndGet());
-			updateGlobalInfo(clientKey,playerInfo,globalInfo);
+			updateGlobalInfo(peerIp,playerInfo,globalInfo);
 			if(NUMBER_OF_PLAYERS.get() == 1){
 				//Start the thread to check for client heart beats every 10 seconds
 				Thread waiting = new Thread(new waitThread());
@@ -123,14 +123,11 @@ public class PlayerMoveImplement implements P2PBase {
 			}
 			CONNECT_FLAG = false;
 			
-			NotifyWait();
-		}
-		public synchronized void NotifyWait() {
-	
 			synchronized (lock) {
 			    lock.notifyAll();
 			}
-	    }
+		}
+
 	}
 	
 	private void connectToBackup() throws RemoteException{
@@ -391,14 +388,21 @@ private class CheckForAndUpdateFailures extends Thread{
 
 	public void startBackup() throws RemoteException {
 		
-		Thread th=new Thread(new CheckForAndUpdateFailures());
-		th.start();
-		if(!counter){
-			peerList.remove();
-			NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-			counter = true;
+
+		try {
+			if(!(peerList.element().equalsIgnoreCase(InetAddress.getLocalHost().getHostAddress()))){
+				String primaddr = peerList.remove();
+				NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+				connectReturn.remove(primaddr);
+				connectToBackup();	
+				Thread th=new Thread(new CheckForAndUpdateFailures()); 
+				th.start();
+			}
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		connectToBackup();
+		
 	
 	}
 

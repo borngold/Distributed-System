@@ -5,7 +5,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GlobalInfoP2P implements Serializable{
     
-    private int [][]atomicToIntGrid;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1999655940450123470L;
+	private int [][]atomicToIntGrid;
     private int sumOftreasures;
     private int numberOfplayers;
     private ConcurrentLinkedQueue<String> peerIPList;

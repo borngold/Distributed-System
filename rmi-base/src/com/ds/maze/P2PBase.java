@@ -10,7 +10,7 @@ public interface P2PBase extends Remote {
 	
 public static final String SERVICE_NAME = "PEERIMPLEMENT"; 
 	
-	public void connectToServer(String clientKey, String peerIp,ClientConnect connect) throws RemoteException;
+	public void connectToServer(String peerIp,ClientConnect connect) throws RemoteException;
 	
 	public HashMap<String, Object> moveToLocation(String keyPressed, String playerId) throws RemoteException;
 	

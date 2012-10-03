@@ -61,11 +61,11 @@ public class Player extends JFrame{
 		try {
 			
 			//instantiate class variables
-			serverList=new ConcurrentLinkedQueue<String>();
-			myKey=new ClientKeygen().genKey();
+			serverList=new ConcurrentLinkedQueue<String>();			
 			if(firstServerIp == null)
 				firstServerIp=InetAddress.getLocalHost().getHostAddress();			
-			myIp=InetAddress.getLocalHost().getHostAddress();	        	
+			myIp=InetAddress.getLocalHost().getHostAddress();
+			myKey = myIp;
 			P2PBase engine = new PlayerMoveImplement(10);
 			P2PBase engineStub = (P2PBase)UnicastRemoteObject.exportObject(engine, 0);
 			Registry registry = LocateRegistry.createRegistry(9000);
@@ -114,7 +114,7 @@ public class Player extends JFrame{
 		}
 				
 		try {
-			changecord.connectToServer(myKey,myIp,connect);
+			changecord.connectToServer(myIp,connect);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

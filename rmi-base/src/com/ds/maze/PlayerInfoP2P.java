@@ -4,7 +4,11 @@ import java.io.Serializable;
 
 public class PlayerInfoP2P implements Serializable{
     
-    private int xCord;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6653181472207284450L;
+	private int xCord;
     private int yCord;
     private int numberOftreasures;
     private String IpAddress;

@@ -46,6 +46,7 @@ public class Player extends JFrame {
    private static String myKey;
    private static String firstServerIp;
    private static String myIp;
+   private static int size = 10;
    private HeartBeatSender hb;
 
    /**
@@ -75,7 +76,7 @@ public class Player extends JFrame {
             firstServerIp = InetAddress.getLocalHost().getHostAddress();
          myIp = InetAddress.getLocalHost().getHostAddress();
          myKey = myIp;
-         P2PBase engine = new PlayerMoveImplement(10);
+         P2PBase engine = new PlayerMoveImplement(size);
          P2PBase engineStub = (P2PBase) UnicastRemoteObject.exportObject(
                engine, 0);
          Registry registry = LocateRegistry.createRegistry(9000);
@@ -310,10 +311,16 @@ public class Player extends JFrame {
     * Start the game
     */
    public static void main(String[] args) {
-      if (args.length > 0)
-         firstServerIp = args[0];
+	   if(args.length > 0){
+		   try { 
+			   size = Integer.parseInt(args[0]); 				
+		   } 
+		   catch(NumberFormatException nFE) { 
+			   firstServerIp = args[0];
+		   }
+	   }
 
-      new Player().startPlaying();
+	   new Player().startPlaying();
    }
 
    /*

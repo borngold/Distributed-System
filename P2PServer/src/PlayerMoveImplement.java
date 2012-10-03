@@ -420,6 +420,7 @@ public class PlayerMoveImplement implements P2PBase {
       connectReturn = gameState;
       peerList = clientList;
       GlobalInfoP2P globalInfo = (GlobalInfoP2P) gameState.get("GLOBALINFO");
+      gridSize = globalInfo.getGridSize();
       initGrid = gridState;
       sumOfTreasures = globalInfo.getSumOftreasures();
       NUMBER_OF_PLAYERS.set(globalInfo.getNumberOfplayers());

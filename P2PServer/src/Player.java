@@ -404,8 +404,15 @@ public class Player extends JFrame {
       @Override
       public void onSuccess(HashMap<String, Object> gameState)
             throws RemoteException {
-
-         updateBoard(gameState);
+    	  GlobalInfoP2P info = (GlobalInfoP2P) gameState.get("GLOBALINFO");
+    	  if(info.getSumOftreasures() > 0){
+    		  updateBoard(gameState);
+    	  }else{
+    		  System.out.println("Game Over");
+    		  System.out.println("All treasures retrieved");
+    		  System.exit(0);    		  
+    	  }
+    		  
 
       }
 

@@ -226,7 +226,7 @@ public class PlayerMoveImplement implements P2PBase {
    public HashMap<String, Object> moveToLocation(String keyPressed,
          String playerId) throws RemoteException {
 
-      if (trasuresExist) {
+      if (trasuresExist && sumOfTreasures > 0) {
          if (connectReturn.get(playerId) == null) {
             HashMap<String, Object> error = new HashMap<String, Object>();
             error.put(playerId, "DISCONNECTED");
@@ -298,10 +298,11 @@ public class PlayerMoveImplement implements P2PBase {
             globalInfo.setAtomicToIntGrid(atomicToIntGrid);
             sumOfTreasures--;
             globalInfo.setSumOftreasures(sumOfTreasures);
-            if (sumOfTreasures == 0) {
-               trasuresExist = false;
-            }
+
          }
+         if (sumOfTreasures == 0) {
+             trasuresExist = false;
+          }
          connectReturn.put("GLOBALINFO", globalInfo);
          return connectReturn;
       } else {

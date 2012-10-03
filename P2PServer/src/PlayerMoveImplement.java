@@ -199,14 +199,16 @@ public class PlayerMoveImplement implements P2PBase {
                      loopCount++;
 
                   }
-                  peerList.remove(backUpIpAddr);
-                  NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
-                  connectReturn.remove(backUpIpAddr);
-                  GlobalInfoP2P globalInfo = (GlobalInfoP2P) connectReturn
-                        .get("GLOBALINFO");
-                  globalInfo.setPeerIPList(peerList);
-                  globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
-                  connectReturn.put("GLOBALINFO", globalInfo);
+                  if(loopCount == 2){
+                	  peerList.remove(backUpIpAddr);
+	                  NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+	                  connectReturn.remove(backUpIpAddr);
+	                  GlobalInfoP2P globalInfo = (GlobalInfoP2P) connectReturn
+	                        .get("GLOBALINFO");
+	                  globalInfo.setPeerIPList(peerList);
+	                  globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
+	                  connectReturn.put("GLOBALINFO", globalInfo);
+                  }
                   if (NUMBER_OF_PLAYERS.get() > 1) {
                      connectToBackup();
                   }
@@ -225,31 +227,32 @@ public class PlayerMoveImplement implements P2PBase {
    @Override
    public HashMap<String, Object> moveToLocation(String keyPressed,
          String playerId) throws RemoteException {
+	   
+	   PlayerInfoP2P playerInfo = (PlayerInfoP2P) connectReturn.get(playerId);
+	   GlobalInfoP2P globalInfo = (GlobalInfoP2P) connectReturn.get("GLOBALINFO");
 
-      if (trasuresExist && sumOfTreasures > 0) {
-         if (connectReturn.get(playerId) == null) {
-            HashMap<String, Object> error = new HashMap<String, Object>();
-            error.put(playerId, "DISCONNECTED");
-            return error;
+	   if (trasuresExist && sumOfTreasures > 0) {
+		   if (connectReturn.get(playerId) == null) {
+			   HashMap<String, Object> error = new HashMap<String, Object>();
+			   error.put(playerId, "DISCONNECTED");
+			   return error;
 
-         }
-         PlayerInfoP2P playerInfo = (PlayerInfoP2P) connectReturn.get(playerId);
-         GlobalInfoP2P globalInfo = (GlobalInfoP2P) connectReturn
-               .get("GLOBALINFO");
-         int xCord = playerInfo.getxCord();
-         int yCord = playerInfo.getyCord();
-         int gridSize = globalInfo.getGridSize();
-         boolean flag = false;
-         if (keyPressed.equalsIgnoreCase("L")) {
-            if (yCord - 1 >= 0) {
-               flag = true;
-               --yCord;
-            }
-         } else if (keyPressed.equalsIgnoreCase("R")) {
-            if ((yCord + 1) <= gridSize - 1) {
-               flag = true;
-               ++yCord;
-            }
+		   }
+
+		   int xCord = playerInfo.getxCord();
+		   int yCord = playerInfo.getyCord();
+		   int gridSize = globalInfo.getGridSize();
+		   boolean flag = false;
+		   if (keyPressed.equalsIgnoreCase("L")) {
+			   if (yCord - 1 >= 0) {
+				   flag = true;
+				   --yCord;
+			   }
+		   } else if (keyPressed.equalsIgnoreCase("R")) {
+			   if ((yCord + 1) <= gridSize - 1) {
+				   flag = true;
+				   ++yCord;
+			   }
 
          } else if (keyPressed.equalsIgnoreCase("U")) {
             if ((xCord - 1) >= 0) {
@@ -306,6 +309,10 @@ public class PlayerMoveImplement implements P2PBase {
          connectReturn.put("GLOBALINFO", globalInfo);
          return connectReturn;
       } else {
+    	 NUMBER_OF_PLAYERS.set(NUMBER_OF_PLAYERS.decrementAndGet());
+    	 globalInfo.setNumberOfplayers(NUMBER_OF_PLAYERS.get());
+    	 connectReturn.put("GLOBALINFO",globalInfo);
+    	 connectReturn.remove(playerId);
          return null;
       }
 

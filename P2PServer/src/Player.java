@@ -330,8 +330,7 @@ public class Player extends JFrame {
 	         }
 	      }
       }
-      board.drawAgain(myinfo.getxCord(), myinfo.getyCord(), gridAfterMove,
-            cord, np);
+      board.drawAgain(myinfo.getxCord(), myinfo.getyCord(), gridAfterMove,cord, np);
 
    }
 

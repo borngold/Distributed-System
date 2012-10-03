@@ -34,14 +34,13 @@ public class PlayerMoveImplement implements P2PBase {
    private AtomicInteger NUMBER_OF_PLAYERS;
    private AtomicInteger[][] initGrid;
    private HashMap<String, Object> connectReturn;
-   private boolean CONNECT_FLAG;
+   private Boolean CONNECT_FLAG;
    private int sumOfTreasures;
    private boolean trasuresExist;
    private ConcurrentHashMap<String, Long> peerHeartBeatUpdate;
    private P2PBase backupServer;
    private Random randomGenerator;
    private int gridSize;
-   private Object lock = new Object();
 
    /**
     * @param size - Size of the N*N grid for the game
@@ -93,9 +92,9 @@ public class PlayerMoveImplement implements P2PBase {
             waiting.start();
          }
 
-         synchronized (lock) {
+         synchronized (CONNECT_FLAG) {
             try {
-               lock.wait();
+               CONNECT_FLAG.wait();
             } catch (InterruptedException e) {
                // TODO Auto-generated catch block
                e.printStackTrace();
@@ -137,8 +136,8 @@ public class PlayerMoveImplement implements P2PBase {
          }
          CONNECT_FLAG = false;
 
-         synchronized (lock) {
-            lock.notifyAll();
+         synchronized (CONNECT_FLAG) {
+            CONNECT_FLAG.notifyAll();
          }
       }
 

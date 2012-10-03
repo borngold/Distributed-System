@@ -40,19 +40,19 @@ public class Player extends JFrame {
 	 * 
 	 */
    private static final long serialVersionUID = -565915827762949662L;
-   private static Board board;
-   private static P2PBase changecord;
-   private static ConcurrentLinkedQueue<String> serverList;
-   private static String myKey;
-   private static String firstServerIp;
-   private static String myIp;
-   private static int size = 10;
+   private Board board;
+   private P2PBase changecord;
+   private ConcurrentLinkedQueue<String> serverList;
+   private String myKey;
+   private String firstServerIp;
+   private String myIp;
+   private int size = 10;
    private HeartBeatSender hb;
 
    /**
     * Constructor
     */
-   public Player() {
+   public Player(int bsize,String ipaddr) {
 
       /*
        * This part of the code creates a registry for all peers. Invocation of
@@ -67,6 +67,10 @@ public class Player extends JFrame {
       if (System.getSecurityManager() == null) {
          System.setSecurityManager(new SecurityManager());
       }
+      
+      if(bsize > 0)
+    	  size = bsize;
+      firstServerIp = ipaddr;
 
       try {
 
@@ -95,7 +99,7 @@ public class Player extends JFrame {
     * This method is responsible for handling the connections to the server
     */
 
-   private static void makeConnectionSettings(String serverIP) {
+   private void makeConnectionSettings(String serverIP) {
       // Set system properties
       Registry registry;
       try {
@@ -282,7 +286,7 @@ public class Player extends JFrame {
 
    }
 
-   private static void updateBoard(HashMap<String, Object> afterMove) {
+   private void updateBoard(HashMap<String, Object> afterMove) {
       int i = 0, j = 0;
       int [][] cord = null;
       Set<String> keys = afterMove.keySet();
@@ -314,23 +318,25 @@ public class Player extends JFrame {
     * Start the game
     */
    public static void main(String[] args) {
+	   int size = -1;
+	   String ipAddr = null;
 	   if(args.length > 0){
 		   try { 
 			   size = Integer.parseInt(args[0]); 				
 		   } 
 		   catch(NumberFormatException nFE) { 
-			   firstServerIp = args[0];
+			   ipAddr = args[0];
 		   }
 	   }
 
-	   new Player().startPlaying();
+	   new Player(size,ipAddr).startPlaying();
    }
 
-   /*
+   /**
     * If the server fails then connect to the backup server
     */
 
-   private static void changeServer() {
+   private void changeServer() {
 
       serverList.remove();
       makeConnectionSettings(serverList.element());
@@ -362,7 +368,7 @@ public class Player extends JFrame {
    }
 
    @SuppressWarnings("serial")
-   private static class NotifyImpl extends UnicastRemoteObject implements
+   private class NotifyImpl extends UnicastRemoteObject implements
          Notify {
       protected NotifyImpl() throws RemoteException {
          super();

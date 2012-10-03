@@ -31,16 +31,16 @@ import com.ds.maze.PolicyFileLocator;
 public class PlayerMoveImplement implements P2PBase {
 
    private ConcurrentLinkedQueue<String> peerList;
-   private static AtomicInteger NUMBER_OF_PLAYERS;
-   private static AtomicInteger[][] initGrid;
-   private static HashMap<String, Object> connectReturn;
-   private static boolean CONNECT_FLAG;
-   private static int sumOfTreasures;
-   private static boolean trasuresExist;
-   private static ConcurrentHashMap<String, Long> peerHeartBeatUpdate;
-   private static P2PBase backupServer;
+   private AtomicInteger NUMBER_OF_PLAYERS;
+   private AtomicInteger[][] initGrid;
+   private HashMap<String, Object> connectReturn;
+   private boolean CONNECT_FLAG;
+   private int sumOfTreasures;
+   private boolean trasuresExist;
+   private ConcurrentHashMap<String, Long> peerHeartBeatUpdate;
+   private P2PBase backupServer;
    private Random randomGenerator;
-   private static int gridSize;
+   private int gridSize;
    private Object lock = new Object();
 
    /**
